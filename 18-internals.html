@@ -1,0 +1,38 @@
+<p>[<a href="README.html">目次</a>]</p>
+<h1>Ethnamの内部動作の概要</h1>
+<p>Ethnaは当初JavaのStrutsの構造を模倣して作られました。そのため、基本的な動作はStrutsに似ています。
+(また,2004年ごろに流行ったPHPフレームワークの一つであるMojaviにも似ています。)</p>
+<h2>大雑把な動作イメージ</h2>
+<ul>
+<li>クライアントからのリクエストをエントリポイントが受け取ります。</li>
+<li>エントリポイントはControllerクラスを呼び出します。</li>
+<li>Controllerは、リクエストに対応するActionClassを探索し、インスタンスを生成し、実行(perform)します</li>
+<li>ActionClassは処理(例えば、ログイン,データベースとのやりとり等)を実行し、結果をControllerに返します</li>
+<li>ControllerはActionClassの戻り値から、ビューオブジェクトを決定し生成します</li>
+<li>ビューオブジェクトはHTML生成してクライアントに対して出力します。</li>
+</ul>
+<p>つまり、Ethnaを使ってアプリケーションを作る場合は</p>
+<ul>
+<li>Controllerがどんなリクエスト(例えば「ログインする」とか「日記を表示する」とか)を受け付けるか(= 「アクション」)を定義して</li>
+<li>定義したアクションが実際に何をするか、というコードを書いて</li>
+<li>その結果どんな画面が表示されるかを書く</li>
+</ul>
+<p>という流れになります。</p>
+<h2>もう少し詳しい内部動作</h2>
+<p>クライアントはアプリケーションのエントリポイントとなるスクリプト(www/index.php など)にアクセスします
+index.phpは以下のようなスクリプトで、Controllerを呼び出します。</p>
+<pre><code class="language-php">&lt;?php
+require_once dirname(__FILE__) . '/../app/Sample_Controller.php';
+Sample_Controller::main('Sample_Controller', 'index');</code></pre>
+<p>ControllerはAction Formというオブジェクトを生成します。このオブジェクトにはクライアントから送信されたフォーム値等のコンテナです。</p>
+<p>Controllerはクライアントから送信されたパラメータに基づいて実行するアクションを決定し、対応するActioClassを生成、実行します。
+なお、デフォルトでは&quot;action_<em>=true&quot;というパラメータが含まれる場合、その</em>の部分の文字列がアクション名となります。</p>
+<p>つまり<code>index.php?action_login=true</code> なら <code>login</code> というアクションになります</p>
+<p>Action ClassはAction Formを利用して、クライアントから送信されたフォーム値や、ビューに表示する変数値を設定します</p>
+<p>Action Classは処理が終了すると、遷移先の名前をコントローラに返します</p>
+<p>ControllerはAction Classからの戻り値(遷移先)に応じてビューオブジェクトを生成します</p>
+<p>ビューオブジェクトは、Action Formからテンプレートファイルで利用する変数値を取得します</p>
+<p>ビューオブジェクトがHTMLを表示します</p>
+<p>以上で、何となくはイメージを掴めていただけたと思います。</p>
+<p>詳しくはEthna_Controllerのコードを読んで見るとよいでしょう。
+triger_WWWメソッドがEthnamの核となる部分ですので、そこを中心に読んでみるとよいと思います。</p>

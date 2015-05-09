@@ -1,0 +1,32 @@
+<p>[<a href="README.html">目次</a>]</p>
+<h1>インストール</h1>
+<p>Ethhamのインストール方法について説明します。</p>
+<p>composerを使ってインストールすることができます。</p>
+<p>プロジェクト名を仮に<code>Sample</code>として、Ethnamをインストールして
+プロジェクトを作成するところまでを説明します。</p>
+<h2>composerをインストール</h2>
+<p>composerをまだインストールしてない場合はインストールしておいてください。</p>
+<p><a href="https://getcomposer.org/doc/00-intro.html#globally">https://getcomposer.org/doc/00-intro.html#globally</a></p>
+<h2>軽く試してみたい場合は</h2>
+<p><a href="/README.html">README</a> に書いてるとおりにやればOKです。</p>
+<p>ただ、<code>composer create-project</code>を使う方法は一見簡単ですが、内部で何が行われているかが隠されてしまうので学習上あまり好ましくありません。
+本格的にEthhamを使う場合はこれから説明するやり方で手動で環境構築することをおすすめします。</p>
+<h2>プロジェクト用ディレクトリを作成</h2>
+<pre><code class="language-sh"># プロジェクト用ディレクトリを作成
+mkdir sample
+cd sample</code></pre>
+<h2>composer.jsonを作成</h2>
+<pre><code class="language-json">{
+  "require": {
+    "dqneo/ethnam": "dev-master",
+    "ethnam/generator": "dev-master",
+    "smarty/smarty": "2.6.*"
+  }
+}</code></pre>
+<h2>パッケージをインストール</h2>
+<pre><code>composer install</code></pre>
+<h2>プロジェクトのスケルトンを作成</h2>
+<pre><code>vendor/bin/ethnam-generator add-project -b . Sample</code></pre>
+<h2>簡易サーバを起動</h2>
+<pre><code>php -t www -S localhost:8080</code></pre>
+<p>ブラウザで<code>http://localhost:8080/</code> にアクセスして &quot;Welcome to Ethnam!&quot;の画面が表示されたらOKです。</p>

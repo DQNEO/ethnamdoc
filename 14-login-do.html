@@ -1,0 +1,82 @@
+<p>[<a href="README.html">目次</a>]</p>
+<h1>実用的なアプリケーション開発 2 (ログイン処理)</h1>
+<h2>ログインアクションの追加</h2>
+<p>フォームがsubmitされた際に実行されるアクション「login_do」を追加します。</p>
+<pre><code>vendor/bin/ethnam-generator add-action login_do</code></pre>
+<p>生成されたファイルの中を見ると、'login_do'という遷移名を返すだけのアクションになっています。
+今回のケースでは'login_do'というビューは不要なので、以下のように変更しておきます。</p>
+<p>app/action/Login/Do.php:</p>
+<pre><code class="language-diff">public function perform()
+{
+-     return 'login_do';
++     return 'index';
+}</code></pre>
+<p>以上の状態でログインボタンを押すと、</p>
+<ul>
+<li>コントローラがlogin_doアクション呼び出す</li>
+<li>Sample_Action_LoginDo::perform()メソッドが実行される</li>
+<li>遷移名としてindexが返される</li>
+</ul>
+<p>という処理の流れで、ホーム画面が表示されると思います。</p>
+<p>実際には画面遷移する前に、(あたりまえですが)フォーム値のチェックや認証処理を行い、エラーが発生した場合はエラーメッセージを表示させる必要があります。</p>
+<h2>フォーム値の取得</h2>
+<p>認証を行うためには、フォームから送信された値を取得する必要があります。そのためには、アクションクラスと1対1で生成されるアクションフォームというオブジェクトを利用します。アクションフォームのクラス定義は、<code>ethnam-generator add-action</code>を実行すると、アクションクラスと同時に生成されていますので、まずは何も考えず、<code>app/action/Login/Do.php</code>に以下のようなコードを追加してみてください。</p>
+<p>app/action/Login/Do.php</p>
+<pre><code class="language-diff">    public $form = array(
++       'mailaddress' =&gt; [
++           'type'          =&gt; VAR_TYPE_STRING,
++       ],
+
+    public function perform()
+    {
++       die($this-&gt;af-&gt;get('mailaddress'));</code></pre>
+<p>以上の状態で、フォームの「メールアドレス」に適当な文字を入力してsubmitすると、その値が表示されるかと思います。</p>
+<p>これで何となくお分かりかと思いますが、フォーム値にアクセスするには(非常に大雑把に言うと)</p>
+<ul>
+<li>アクションフォームでフォーム定義を記述する</li>
+<li>アクションクラスにメンバ変数として設定されている$afオブジェクト(ActionFormの略です)のアクセサ(get()/set())を通じて値を取得/設定する</li>
+</ul>
+<p>という手順になります。</p>
+<h2>バリデーション(フォーム値の検証)</h2>
+<p>たかがフォーム値にアクセスするのに何故こんな面倒な手順が必要なのか、にはいくつか理由がありますが(ほとんどはセキュリティ上の理由)、この方法の最大のメリットはフォーム値の自動検証です。</p>
+<p>アクションスクリプトのスケルトンを生成すると、アクションフォームに以下のようなコメントも生成されているかと思います。</p>
+<pre><code class="language-php">         /*
+         'sample' =&gt; array(
+             'name'          =&gt; 'Sample',
+             'required'      =&gt; true,
+             'min'           =&gt; null,
+             'max'           =&gt; null,
+             'regexp'        =&gt; null,
+             'custom'        =&gt; null,
+             'filter'        =&gt; null,
+             'form_type'     =&gt; FORM_TYPE_TEXT,
+             'type'          =&gt; VAR_TYPE_INT,
+         ),
+         */</code></pre>
+<p>上記のように、各フォーム値には'name'〜'type'まで計9つの属性を設定することが出来ます(必須なのは'type'のみです)。Ethnamでは、ここで設定されら属性を利用したフォーム値の自動検証機能を提供しています。</p>
+<p>ここで先ほどのフォーム値'mailaddress'を利用して実際に試してみます。まず、先ほどの'mailaddress'の属性を下記のように変更します。</p>
+<pre><code class="language-diff">       'mailaddress' =&gt; [
++          'name'          =&gt; 'メールアドレス',
++          'required'      =&gt; true,
+           'type'          =&gt; VAR_TYPE_STRING,
+       ],
++      'password' =&gt; [
++          'name'          =&gt; 'パスワード',
++          'required'      =&gt; true,
++          'type'          =&gt; VAR_TYPE_STRING,
++      ],</code></pre>
+<p>これは、フォーム値'mailaddress'の表示名が「メールアドレス」であり、また入力が必須であることを示しています。ついでにpasswordも必須としてしまいます。</p>
+<p>次に、アクションクラスで自動入力処理を行います。具体的には、アクションクラスのprepare()メソッドに以下のような処理を追加します。</p>
+<pre><code class="language-diff">   public function prepare()
+   {
++      if ($this-&gt;af-&gt;validate() &gt; 0) {
++          return 'login';
++      }</code></pre>
+<p>アクションフォームのvalidate()メソッドは、定義に従ってフォーム値を自動検証し、検出したエラーの数を戻り値として返します(発生したエラーの扱い等については後述します)。</p>
+<p>この状態で、メールアドレスを空欄にしてsubmitすると以前と異なりトップページは表示されず、再度ログインページが表示されるのが分かるかと思います。</p>
+<p>以上が、フォーム値の検証に関する基本的な説明でした。</p>
+<p>なお、アクションクラスのprepare()メソッドとperform()メソッドの関係を知りたい場合は、Ethna_Controller::perform()のコードを見るのが手っ取り早いです。
+まずアクションクラスのprepare()メソッドが呼ばれ、prepare()メソッドがnullを返した場合のみperform()メソッドが呼び出されます。</p>
+<p>ようするに、prepare()メソッドでフォーム値の検証を行うこと、perform()メソッドでは全てのデータはサニタイズされているという前提で処理を行うことが出来る、安全且つ簡潔なコードが書けるというわけです(やっぱりStrutsの真似)。</p>
+<p>なお、フォーム値のバリデーションについては別記事をご覧下さい。</p>
+<p>see also: [フォーム値のバリデーションを行う]</p>

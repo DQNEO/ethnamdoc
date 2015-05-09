@@ -1,0 +1,23 @@
+<p>[<a href="README.html">目次</a>]</p>
+<h1>リリース方法</h1>
+<h2>バージョニングルール</h2>
+<p>基本的にはsemvarであるが、それほど厳密ではない。
+とくに、マイナーバージョンUPで後方互換が壊れることはあり得る。</p>
+<h2>大まかな方針</h2>
+<ul>
+<li><code>master</code>は安定版ではなく、開発ブランチとする。これが唯一の永続ブランチである。</li>
+<li><code>develop</code>ブランチはもたない。機能ごとにfeatureブランチを切り、完成したら<code>master</code>にマージする</li>
+<li>git tagでタグ付けをするとpackagistに自動反映される</li>
+<li>タグ付けは<code>master</code>ブランチ上で行う</li>
+</ul>
+<p>以上のことを自動化するために<a href="/ship.sh">ship.sh</a>コマンドを使用する。</p>
+<h2>ship.shの使い方</h2>
+<pre><code>ship.sh 2.3.4</code></pre>
+<p>こうすると、</p>
+<ul>
+<li>PHPソースのバージョン番号を書き換えて</li>
+<li>カレントブランチにコミットして</li>
+<li>git tag</li>
+<li>git push</li>
+</ul>
+<p>までやってくれる。</p>

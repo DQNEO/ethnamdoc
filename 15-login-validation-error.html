@@ -1,0 +1,48 @@
+<p>[<a href="README.html">目次</a>]</p>
+<h1>実用的なアプリケーション開発 3 バリデーションエラー</h1>
+<h2>エラー処理(フォーム値の表示)</h2>
+<p>(自動にせよ手動にせよ)フォーム値の検証を行ってエラーが発生したら、それに伴って幾つかの処理を行う必要があります。</p>
+<p>まずは最低限の処理その1ということで、入力されたフォーム値をvalue属性に設定してみます。</p>
+<p>フォーム値は自動的にSmarty変数として割り当てられるので、それをテンプレートから参照するには</p>
+<p><code>{$form.フォーム項目名}</code></p>
+<p>と記述すればOKです。ですのでここではlogin.tplを以下のように変更します。</p>
+<p>template/ja_JP/login.tpl:</p>
+<pre><code class="language-diff">   &lt;tr&gt;
+    &lt;td&gt;メールアドレス&lt;/td&gt;
+-   &lt;td&gt;&lt;input type="text" name="mailaddress" value=""&gt;&lt;/td&gt;
++   &lt;td&gt;&lt;input type="text" name="mailaddress" value="{$form.mailaddress}"&gt;&lt;/td&gt;
+   &lt;/tr&gt;</code></pre>
+<p>この状態で、メールアドレスのみを入力してsubmitすると、(パスワードが入力されていないのでエラーにはなりますが)メールアドレスのフォーム値が失われずに表示されていると思います。</p>
+<p>なお、{$form.*}で表示される値は常にエスケープされていますので、サニタイズ等は考慮する必要はありません。</p>
+<h2>エラー処理(エラーメッセージの表示)</h2>
+<p>次に最低限の処理その2である、エラーメッセージの表示を行います。発生したエラーは、やはりEthnamフレームワークによって自動的にテンプレート変数として割り当てられ、</p>
+<ul>
+<li>全てのエラーメッセージ一覧</li>
+<li>指定されたフォーム名に対応するエラーメッセージ</li>
+</ul>
+<p>という形でアクセスすることが可能です。</p>
+<p>まず全てのエラーメッセージを表示させてみます。エラーメッセージは配列として{$errors}というSmarty変数に割り当てられていますので:</p>
+<p>template/ja_JP/login.tpl:</p>
+<pre><code class="language-diff">&lt;form action="." method="post"&gt;
++{if count($errors)}
++  &lt;ul&gt;
++  {foreach from=$errors item=error}
++   &lt;li&gt;{$error}&lt;/li&gt;
++  {/foreach}
++  &lt;/ul&gt;
++{/if}</code></pre>
+<p>というように書くと、全てのエラーメッセージを表示させることが出来ます。</p>
+<p>また、特定のフォーム名に対応するエラーメッセージを表示させるには、Ethnaフレームワークの提供するSmarty関数&quot;message&quot;を利用します。</p>
+<p>template/ja_JP/login.tpl:</p>
+<pre><code class="language-html">    &lt;tr&gt;
+     &lt;td&gt;メールアドレス&lt;/td&gt;
+     &lt;td&gt;&lt;input type="text" name="mailaddress" value="{$form.mailaddress}"&gt;{message name="mailaddress"}&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+     &lt;td&gt;パスワード&lt;/td&gt;
+     &lt;td&gt;&lt;input type="password" name="password" value=""&gt;{message name="password"}&lt;/td&gt;
+     &lt;/tr&gt;</code></pre>
+<p>Ethnamフレームワークにおけるエラー処理ポリシーについては以下をご覧下さい。</p>
+<p>see also: エラー処理ポリシー</p>
+<p>また、自動検証で設定されるエラーメッセージは(もちろん)任意にカスタマイズすることが出来ます。</p>
+<p>see also: [自動検証のエラーメッセージをカスタマイズする]</p>

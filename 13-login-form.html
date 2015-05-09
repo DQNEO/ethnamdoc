@@ -1,0 +1,40 @@
+<p>[<a href="README.html">目次</a>]</p>
+<h1>実用的なアプリケーション開発 1 (ログイン画面)</h1>
+<p>(旧: <a href="http://ethna.jp/old/ethna-document-tutorial-practice3.html">http://ethna.jp/old/ethna-document-tutorial-practice3.html</a> )</p>
+<h2>ログイン機能を作ってみる</h2>
+<p>もうちょっと実用的な例として、ログイン機能を例にとって</p>
+<ul>
+<li>フォーム値の取得方法</li>
+<li>基本的なエラー処理方法</li>
+<li>ビューへのデータ設定方法</li>
+</ul>
+<p>といった点をご説明したいと思います。</p>
+<h2>ログイン画面の作成</h2>
+<p>前回の記事のやり方でログイン画面を作ります。</p>
+<pre><code>vendor/bin/ethnam-generator add-action login
+vendor/bin/ethnam-generator add-view -t login</code></pre>
+<h2>ログイン画面の変更</h2>
+<p>作成したテンプレートファイル(<code>template/ja_JP/login.tpl</code>)をもうちょっとログイン画面っぽいものに作り変えましょう。</p>
+<p>具体的には以下のようにしてみます。</p>
+<p>template/ja_JP/login.tpl</p>
+<pre><code class="language-html">&lt;form action="." method="post"&gt;
+  &lt;table border="0"&gt;
+    &lt;tr&gt;
+      &lt;td&gt;メールアドレス&lt;/td&gt;
+      &lt;td&gt;&lt;input type="text" name="mailaddress" value=""&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;パスワード&lt;/td&gt;
+      &lt;td&gt;&lt;input type="password" name="password" value=""&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/table&gt;
+  &lt;p&gt;
+  &lt;input type="submit" name="action_login_do" value="ログイン"&gt;
+  &lt;/p&gt;
+&lt;/form&gt;</code></pre>
+<p>通常のHTMLファイル(=Smartyのテンプレートファイル)ですが、1点Ethnam独自の点があります。</p>
+<p>submitボタンの&quot;name=action_login_do&quot;は、このフォームをsubmitした際に、「login_do」というアクションを実行することを意味します。
+「login_do」というはStrutsの慣習をそのまま使っているだけなので、「login」と重ならなければ「login_exec」でも「login_submit」でも何でも構いません。</p>
+<p>以上で準備は完了です。</p>
+<p><a href="http://localhost:8000/?action_login=true">http://localhost:8000/?action_login=true</a></p>
+<p>にアクセスしてログイン画面が表示されることを確認してください。</p>
