@@ -1,0 +1,149 @@
+<h1>ファイルや配列にアクセスする</h1>
+<ul>
+<li>ファイルへのアクセス </li>
+<li>配列へのアクセス 
+<ul>
+<li>ファイルの配列の場合 </li>
+</ul></li>
+<li>多次元配列 </li>
+</ul>
+<h2>ファイルや配列にアクセスする</h2>
+<h3>ファイルへのアクセス</h3>
+<p>アップロードされたファイルへのアクセスは、その処理の大部分をPHPが行ってくれるので至って簡単です。</p>
+<p>まず、 <a href="form-overview.html">フォーム値にアクセスする</a>で記述した場合と同様に、フォーム値を定義します。</p>
+<pre><code>'sample_file' =&gt; array(
+    'type' =&gt; VAR_TYPE_FILE,
+),</code></pre>
+<p>ここで大事なのは、'type'属性にVAR_TYPE_FILEを指定していることで、ここをVAR_TYPE_STRING等にしているとアップロードされたファイルにアクセスできませんのでご注意下さい。</p>
+<p>次にファイルをアップロードするためのテンプレートを記述します。ここでは特別な点はなにもありません。</p>
+<pre><code>...
+&lt;form method="post" enctype="multipart/form-data"&gt;
+ &lt;input type="file" name="sample_file"&gt;
+ &lt;input type="submit"&gt;
+&lt;/form&gt;
+...</code></pre>
+<p>後はprepare()あるいはperform()メソッドでアクションフォームを通じてフォーム値にアクセスするだけです。アップロードされたファイルは、PHPの$_FILES変数と同様にアクセスが可能です。従って:</p>
+<pre><code>perform()
+{
+    var_dump($this-&gt;af-&gt;get('sample_file'));
+}</code></pre>
+<p>とすると</p>
+<pre><code>array(5) {
+  ["name"]=&gt;
+  string(10) "sample.gif"
+  ["type"]=&gt;
+  string(9) "image/gif"
+  ["tmp_name"]=&gt;
+  string(14) "/tmp/php3PxT99"
+  ["error"]=&gt;
+  int(0)
+  ["size"]=&gt;
+  int(220)
+}</code></pre>
+<p>というような結果となります。各要素の詳細については <a href="http://jp2.php.net/manual/ja/features.file-upload.php">PHPマニュアルのファイルアップロードに関するセクション</a>を御覧下さい。</p>
+<p>また、フォーム値自体が送信されていない場合、</p>
+<pre><code>null</code></pre>
+<p>となります。また、ファイルが何もアップロードされなかった場合は以下のようにerror要素に4*1が返されます。</p>
+<pre><code>array(5) {
+  ["name"]=&gt;
+  string(0) ""
+  ["type"]=&gt;
+  string(0) ""
+  ["tmp_name"]=&gt;
+  string(0) ""
+  ["error"]=&gt;
+  int(4)
+  ["size"]=&gt;
+  int(0)
+}</code></pre>
+<p>なお、ファイルに関してもフォーム値の自動検証を利用して、必須チェック、ファイルの最大、最小サイズ等のチェックが可能です。</p>
+<h3>配列へのアクセス</h3>
+<p>配列を使用する場合も、特別に手間は掛かりません。まずフォーム値を以下のように定義します。</p>
+<pre><code>'sample_array' =&gt; array(
+    'type' =&gt; array(VAR_TYPE_STRING),
+),</code></pre>
+<p>見ての通り、'type'属性に定数1つを要素にもつ配列を指定します。これにより、このフォーム値は配列であることを明示します。</p>
+<p>テンプレートに関しても特別な点はなく、通常のPHPでのフォーム配列と同様です。</p>
+<pre><code>&lt;form method="post"&gt;
+ &lt;input type="checkbox" name="sample_array[]" value="1"&gt;
+ &lt;input type="checkbox" name="sample_array[]" value="2"&gt;
+ &lt;input type="checkbox" name="sample_array[]" value="3"&gt;
+ &lt;input type="checkbox" name="sample_array[]" value="4"&gt;
+ &lt;input type="submit"&gt;
+&lt;/form&gt;</code></pre>
+<p>続いてファイル等と同様にprepare()あるいはperform()メソッドでアクションフォームを通じてフォーム値にアクセスするだけです。例えば以下のように</p>
+<pre><code>perform()
+{
+    var_dump($this-&gt;af-&gt;get('sample_array'));
+}</code></pre>
+<p>とすると</p>
+<pre><code>array(2) {
+  [0]=&gt;
+  string(1) "3"
+  [1]=&gt;
+  string(1) "4"
+}</code></pre>
+<p>のように配列を取得することが出来ます。なお、フォーム値に何も入力されない、あるいはフォーム値自体が送信されなかった場合は</p>
+<pre><code>null</code></pre>
+<p>となります。ただし、末尾のブラケット削除してフォーム値が送信された場合、その値をスカラー値として扱われます。つまり、上記の例で、</p>
+<pre><code>/?sample_array=string</code></pre>
+<p>というアクセスがあると</p>
+<pre><code>string(6) "string"</code></pre>
+<p>という結果になるということです。これについてはフォーム値の自動検証で抑止することが出来ます(配列指定のフォーム値にスカラー値が渡された場合に自動的にエラーとすることが出来ます)。</p>
+<h4>ファイルの配列の場合</h4>
+<p>$_FILESの配列とは構造が変わっています。基本的には、単一のファイルをアップロードした内容が複数並ぶだけです。たとえばふたつアップロードした場合は以下のようになります。</p>
+<pre><code>array(2) {
+  [0]=&gt; array(5) {
+    ["name"]=&gt; string(11) "Sunset.jpeg"
+    ["type"]=&gt; string(10) "image/jpeg"
+    ["size"]=&gt; int(71189) 
+    ["tmp_name"]=&gt; string(14) "/tmp/php9bU0Wm"
+    ["error"]=&gt; int(0)
+  }
+  [1]=&gt; array(5) {
+    ["name"]=&gt; string(11) "Sunset.jpeg"
+    ["type"]=&gt; string(10) "image/jpeg"
+    ["size"]=&gt; int(71189) 
+    ["tmp_name"]=&gt; string(14) "/tmp/php7aF1Ll"
+    ["error"]=&gt; int(0)
+  }
+}</code></pre>
+<p>そして、複数アップロードする場合、アップロードされなかったものについては、NULLではなく、該当するフィールドのerror要素に4が設定されます。これは単一のアップロードの場合と同様です。</p>
+<p>以下に「ひとつめのフィールド」だけアップロードし、「ふたつめのフィールド」をアップロード「しなかった」場合の例を示します。</p>
+<pre><code>array(2) {
+  [0]=&gt; array(5) {
+    ["name"]=&gt; string(11) "Sunset.jpeg"
+    ["type"]=&gt; string(10) "image/jpeg"
+    ["size"]=&gt; int(71189) 
+    ["tmp_name"]=&gt; string(14) "/tmp/php9bU0Wm"
+    ["error"]=&gt; int(0)
+  }
+  [1]=&gt; array(5) {
+    ["name"]=&gt; string(0) ""
+    ["type"]=&gt; string(0) ""
+    ["size"]=&gt; int(0)
+    ["tmp_name"]=&gt; string(0) ""
+    ["error"]=&gt; int(4)
+  }
+}</code></pre>
+<h3>多次元配列</h3>
+<p>フォーム定義を以下のように [] を使ってグループ化することで、グループ化した値を簡単に受け取ることができます。詳しくは <a href="form-multiarray.html">多次元配列にアクセスする</a> のページを参照してください。</p>
+<pre><code>var $form = array(
+       'User[name]' =&gt; array(
+           'name' =&gt; '名前',
+           'type' =&gt; VAR_TYPE_STRING,
+           'form_type' =&gt; FORM_TYPE_TEXT,
+       ),
+       'User[phone][home]' =&gt; array(
+           'name' =&gt; '自宅電話番号',
+           'type' =&gt; VAR_TYPE_STRING,
+           'form_type' =&gt; FORM_TYPE_TEXT,
+       ),
+       'User[phone][mobile]' =&gt; array(
+           'name' =&gt; '携帯電話番号',
+           'type' =&gt; VAR_TYPE_STRING,
+           'form_type' =&gt; FORM_TYPE_TEXT,
+       ),
+   );</code></pre>
+<hr />
+<p>*1PHP 4.3.0以降ではUPLOAD_ERR_NO_FILEという定数が割り当てられています  </p>

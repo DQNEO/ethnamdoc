@@ -1,0 +1,94 @@
+<h1>フォームヘルパ サンプル集</h1>
+<p><a href="view-form_helper.html">フォームヘルパのページ</a> で説明した通り、フォームヘルパはアクションフォームのフォーム定義を読み取り、入力フォームを自動生成してくれる優れた機能です。</p>
+<p>非常に強力な分、機能も複雑なため、ここではその使い方をサンプルという形で示しています。</p>
+<ul>
+<li>フォームヘルパ サンプル集 
+<ul>
+<li>サンプルコード </li>
+<li>GET メソッドで submit できないの？ </li>
+<li>ファイルをアップロードする処理をフォームヘルパで </li>
+<li>複数選択が必要な SELECT ボックス </li>
+<li>テキストボックスのサイズを指定して、非表示にする </li>
+<li>いちいちタグに value=&quot;hoge&quot; とか書きたくないよ！ </li>
+<li>編集画面に初期値を指定する </li>
+<li>日付の選択フォームを簡単に </li>
+<li>入力ウィザードを作る </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | mumumu | 2009-01-29 | 新規作成 |</p>
+<h3>サンプルコード</h3>
+<h4>GET メソッドで submit できないの？</h4>
+<p>{form}{/form} ブロックタグは、デフォルトでPOST メソッドを指定しますが、もちろん それ以外の方法も指定できます。</p>
+<pre><code>{* テンプレート側 *}
+{form method="GET" ethna_action="formhelper"}
+  (... 省略)
+{/form}</code></pre>
+<p>出力は以下のようになります。</p>
+<pre><code>&lt;form method="GET"&gt;
+  &lt;input type="hidden" name="action_formhelper" value="true"&gt;
+  (... 省略)
+&lt;/form&gt;</code></pre>
+<h4>ファイルをアップロードする処理をフォームヘルパで</h4>
+<p>ファイルをアップロードする際には、<form enctype="multipart/form-data"> と指定する必要があります。こんなtypoしやすい文字列をいちいち書いてられないので、フォームヘルパを使いましょう。</p>
+<pre><code>// フォーム定義
+var $form = array(
+    'sample' =&gt; array(
+         'type' =&gt; VAR_TYPE_FILE, // ファイル型
+         'form_type' =&gt; FORM_TYPE_FILE, // form_typeにもファイル型を指定
+         'name' =&gt; 'ファイルを選んでね',
+    ),
+);</code></pre>
+<p>{form}{/form} ブロックタグの enctype属性に &quot;file&quot; と指定してあげれば、typoしやすい multipart/form-data も生成してくれます。</p>
+<pre><code>{* テンプレート側 *}
+{form enctype="file" ethna_action="formhelper"}
+  {form_input name="sample"}
+{/form}</code></pre>
+<p>出力は以下のようになります。</p>
+<pre><code>&lt;form enctype="multipart/form-data" method="post"&gt;
+  &lt;input type="hidden" name="action_formhelper" value="true"&gt;
+  &lt;input type="file" name="sample" value="" /&gt;
+&lt;/form&gt;</code></pre>
+<h4>複数選択が必要な SELECT ボックス</h4>
+<p>いわゆる multiple な SELECT ボックスを作りたい場合は、以下のようにします。一度に複数選択できるようにするので、フォーム定義の type 属性に 配列型を指定し、テンプレートでも multiple 属性を指定しているのがミソです。</p>
+<pre><code>// フォーム定義
+var $form = array(
+    'sample' =&gt; array(
+         'type' =&gt; array(VAR_TYPE_INT), // 配列指定のフォーム定義
+         'form_type' =&gt; FORM_TYPE_SELECT,
+         'name' =&gt; '複数選んでね',
+         'option' =&gt; array(1 =&gt; '1番目', 2 =&gt; '2番目'),
+    ),
+);
+
+// テンプレート側
+{form_input name="sample" multiple="multiple"}</code></pre>
+<p>出力は以下のようになります。これにより、複数の整数型の値を選択し、submitできるようになります。</p>
+<pre><code>&lt;select multiple="multiple" name="sample[]"&gt;
+  &lt;option value="1"&gt;1番目&lt;/option&gt;
+  &lt;option value="2"&gt;2番目&lt;/option&gt;
+&lt;/select&gt;</code></pre>
+<h4>テキストボックスのサイズを指定して、非表示にする</h4>
+<p>フォームヘルパのタグによって予約されている属性以外を埋め込めることから、HTMLのサイズやスタイルも指定できます。テキストボックスの場合、以下のようにします。</p>
+<pre><code>// フォーム定義
+// 通常の指定と変わらない
+var $form = array(
+    'sample' =&gt; array(
+         'type' =&gt; VAR_TYPE_STRING,
+         'form_type' =&gt; FORM_TYPE_TEXT,
+         'name' =&gt; 'テキストボックスのサンプル',
+    ),
+);
+
+{* テンプレート側 *}
+{* サイズを50にし、非表示にする *}
+{form_input name="sample" size="50" style="display:none"}</code></pre>
+<p>出力は以下のようになります。</p>
+<pre><code>&lt;input size="50" style="display:none" type="text" name="sample" value="" /&gt;</code></pre>
+<h4>いちいちタグに value=&quot;hoge&quot; とか書きたくないよ！</h4>
+<p>... 執筆中</p>
+<h4>編集画面に初期値を指定する</h4>
+<p>... 執筆中</p>
+<h4>日付の選択フォームを簡単に</h4>
+<p>... 執筆中</p>
+<h4>入力ウィザードを作る</h4>
+<p>... 執筆中</p>

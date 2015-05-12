@@ -1,0 +1,65 @@
+<h1>フィルタプラグインの作成</h1>
+<p>ここでは、Ethna 向けの フィルタプラグインの作成方法を説明します。Ethna が持つフィルタチェイン機能については、こちらを参照して下さい。</p>
+<ul>
+<li>フィルタプラグインの作成 
+<ul>
+<li>フィルタプラグインの実体 </li>
+<li>フィルタプラグインを作成する </li>
+<li>Ethna 2.5.0 以前 </li>
+<li>処理を記述する </li>
+<li>フィルタプラグインを登録する </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | mumumu | 2009-06-21 | 新規作成 |</p>
+<h3>フィルタプラグインの実体</h3>
+<p>フィルタプラグインはEthnaのフィルタ機能を実行するものですので、中身は実際のフィルタと変わりません。但し、プラグインですので、クラス名とファイルの置き場所は、Ethnaのプラグインの規則に従う必要があります。</p>
+<h3>フィルタプラグインを作成する</h3>
+<h4>Ethna 2.5.0 以前</h4>
+<p>Ethna 2.5.0 より以前のバージョンでは自動生成機能はありませんので、app/Plugin/Filter/ExecutionTime.php をコピーして手動で作成して下さい。</p>
+<h3>処理を記述する</h3>
+<p>以下のように、４つのメソッドが定義されていますので、任意の処理を記述してください。</p>
+<pre><code>&lt;?php
+// vim: foldmethod=marker
+/**
+ * [APPID]_Plugin_Filter_Hoge
+ *
+ * @author your name &lt;yourname@example.com&gt;
+ * @license http://www.opensource.org/licenses/bsd-license.php The BSD License
+ * @package Ethna_Plugin
+ * @version $Id: 53655346060f63aa0dd0203dd0c86f79bab7d7c6 $
+ */
+
+// {{{ [APPID]_Plugin_Filter_Hoge
+/**
+ * Filter Plugin Class Hoge.
+ *
+ * @author yourname &lt;yourname@example.com&gt;
+ * @access public
+ * @package Ethna_Plugin 
+ */
+class [APPID]_Plugin_Filter_Hoge extends Ethna_Plugin_Filter
+{
+    function preFilter()
+    {
+    }
+
+    function preActionFilter($action_name)
+    {
+    }
+
+    function postActionFilter($action_name, $forward_name)
+    {
+    }
+
+    function postFilter()
+    {
+    }
+}
+// }}}
+?&gt;</code></pre>
+<h3>フィルタプラグインを登録する</h3>
+<p>フィルタプラグインを実際に使うには、作成して実装するだけでなく、コントローラーにフィルタチェインの一部として登録する必要があります。</p>
+<p>フィルタプラグインを登録するには、[Appid]_Controller の $filter メンバに登録すれば、そのプラグインがフィルタチェインのひとつとして登録されます。</p>
+<pre><code>var $filter = array(
++ 'Ethna_Plugin_Filter_Hoge',
+ );</code></pre>

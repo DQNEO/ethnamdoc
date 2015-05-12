@@ -1,0 +1,222 @@
+<h1>PATH_INFOを使ったRequest-URIからのパラメータの取得</h1>
+<ul>
+<li>PATH_INFOを使ったRequest-URIからのパラメータの取得 
+<ul>
+<li>概要 </li>
+<li>使用例 </li>
+<li>$action_map の設定 </li>
+<li>_getPath_Index() 関数の定義 </li>
+<li>URL_HANDLER 変数の設定 </li>
+<li>$config['url'] の設定 </li>
+<li>echo_msg アクションを追加 </li>
+<li>細かい使いかた </li>
+<li>PATH_INFOから複数のパラメータを取得する </li>
+<li>path_extのパラメータ </li>
+<li>PATH_INFOの正規化 </li>
+<li><em>getPath</em>*() の返り値 </li>
+</ul></li>
+</ul>
+<p>書いた人: いちい</p>
+<h3>概要</h3>
+<p>Request-URIからパラメータを取得したいときは、Ethna_UrlHandlerクラスを使うと便利です。</p>
+<p>Ethna_UrlHandlerは次の2つの機能を持っています。</p>
+<ul>
+<li>
+<p>PATH_INFOからaction, リクエストパラメータへの変換</p>
+<ul>
+<li>エントリポイントとPATH_INFOからactionを決定する</li>
+<li>PATH_INFOから$_REQUESTなどにパラメータをインポートする</li>
+<li>コントローラに組込み済み</li>
+</ul>
+</li>
+<li>action, パラメータからPATH_INFO(に相当するパス文字列)への変換
+<ul>
+<li>actionからエントリポイントを決定</li>
+<li>その他のパラメータからPATH_INFOを生成</li>
+<li>Ethnaで定義済みのSmartyプラグイン {url} で利用可能</li>
+</ul></li>
+</ul>
+<p>また、Ethna-2.3.2からEthna_UrlHandlerがプラグインを使っても利用できるようになりました。</p>
+<p><strong><a href="urlhandler-plugin-neturlmapper.html">Net_URL_Mapperを使ったUrlhandlerプラグイン</a></strong></p>
+<p>UrlHandlerとエントリポイント、mod_rewriteとの関係などについては、以下を参照してください。</p>
+<p><strong><a href="urlhandler-example.html">URLHandlerの設定例</a></strong></p>
+<h3>使用例</h3>
+<p>新規にプロジェクトを作ると、app/Appid_UrlHandler.phpファイルが作られ、アプリケーションのUrlHandlerクラスが用意されます。この中の$action_mapを設定することでUrlHandlerが利用できます。デフォルトではなにもしません。</p>
+<p>以下では、 <a href="http://localhost/sample/index.php/echo/hello"><a href="http://localhost/sample/index.php/echo/hello">http://localhost/sample/index.php/echo/hello</a></a> のアクセスで、エントリポイント index.php にパラメータ echo='hello' を指定するための例を説明します。</p>
+<h4>$action_map の設定</h4>
+<ul>
+<li>
+<p>app/Appid_UrlHandler.php</p>
+<p>var $action_map = array(
+'index' =&gt; array(
+'echo_msg' =&gt; array(
+'path' =&gt; 'echo',
+'path_regexp' =&gt; '|^echo/(.*)$|',
+'path_ext' =&gt; array('msg' =&gt; array()),
+),
+),
+);</p>
+</li>
+<li>'index'
+<ul>
+<li>明確な位置づけはないですが、エントリポイントごとに設定を切替えるための見出しとして使います。詳しくは後述します。</li>
+</ul></li>
+<li>'echo_msg'
+<ul>
+<li>以下のpathの設定に対応するEthnaでのアクション名を指定します。</li>
+</ul></li>
+<li>'path'
+<ul>
+<li>PATH_INFOの中でパラメータではなくパス部分と解釈されるprefixです。PATH_INFO生成時にprefixとして付加されるときと、path_regexpより低コストのマッチングをするときに使われます。</li>
+</ul></li>
+<li>'path_regexp'
+<ul>
+<li>PATH_INFOからパラメータを切り出すための正規表現です。なお、この例では正規表現のデリミタを (よくある '/' ではなく) '|' としています。</li>
+</ul></li>
+<li>'path_ext'
+<ul>
+<li>PATH_INFOに埋め込まれるパラメータと、Ethnaでのフォーム名との対応を記述します。正規表現の後方参照と、arrayの要素の順序が対応します。</li>
+</ul></li>
+</ul>
+<h4>_getPath_Index() 関数の定義</h4>
+<p>アクションとパラメータからPATH_INFOを含むURLを生成するときに使われます。現在のところ、Ethna組込みのSmarty関数{url}を利用するときのみ必要な作業です。</p>
+<p>上のエントリポイントで指定した 'index' に対応するものとして、 _getPath_Index() という関数名になります。</p>
+<ul>
+<li>
+<p>app/Appid_UrlHandler.php</p>
+<p>function _getPath_Index()
+{
+return array(&quot;/index.php/&quot;, array());
+}</p>
+</li>
+</ul>
+<h4>URL_HANDLER 変数の設定</h4>
+<p>$action_map の中で 'index' の設定を使うことを指示するために、エントリポイントで $_SERVER['URL_HANDLER'] の値を 'index' に設定します。</p>
+<ul>
+<li>
+<p>エントリポイントに記述する場合</p>
+<ul>
+<li>www/index.php を以下のように設定</li>
+</ul>
+<p>&lt;?php
+include_once('/path/to/appid/app/Appid_Controller.php');
+$_SERVER['URL_HANDLER'] = 'index';</p>
+<p>Appid_Controller::main('Appid_Controller', 'index');
+?&gt;</p>
+</li>
+<li>
+<p>Apache の .htaccess に記述する場合</p>
+<ul>
+<li>エントリポイントのファイル名を拡張子 '.php' なしで使いたい場合には以下のように設定するとよいでしょう(詳しくはApacheのマニュアルを参照してください)。</li>
+</ul>
+<p>DirectoryIndex index
+&lt;FilesMatch &quot;^index$&quot;&gt;
+ForceType application/x-httpd-php
+SetEnv URL_HANDLER index
+</FilesMatch></p>
+</li>
+</ul>
+<p>$_SERVER や SetEnv を経由するのは複雑なようですが、 $action_map のエントリが膨大になった場合に、リクエストのたびに膨大な量の照合が発生することを避ける意図があります。</p>
+<h4>$config['url'] の設定</h4>
+<p>さらに、アプリケーションの(ベースとなる)URLを設定します。これは、htmlの相対パス指定がPATH_INFOによって混乱するのを避けるためです。</p>
+<ul>
+<li>
+<p>etc/app-ini.php</p>
+<p>$config = array(
+...
+'url' =&gt; '/sample/',
+...</p>
+</li>
+</ul>
+<h4>echo_msg アクションを追加</h4>
+<ul>
+<li>
+<p>echo_msg アクションを追加</p>
+<p>$ ethna add-action echo_msg</p>
+</li>
+<li>
+<p>app/action/Echo/Msg.php を編集</p>
+<p>var $form = array(
+'msg' =&gt; array(),
+...
+);</p>
+<p>function prepare()
+{
+$this-&gt;af-&gt;validate();
+}</p>
+</li>
+<li>
+<p>echo_msg のテンプレートを追加 (ビューは省略)</p>
+<p>$ ethna add-template echo_msg</p>
+</li>
+<li>
+<p>template/ja/echo/msg.tpl を編集</p>
+<p>&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;&gt;</p>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    </head>
+    <body>
+        <h1>Appid</h1>
+        <p>message = {$form.msg}</p>
+     <p>a url to echo "good morning" is <a href={url action="echo_msg" msg="good morning"}>here</a>.</p>
+    </body>
+</html>
+</li>
+</ul>
+<p>これで <a href="http://localhost/sample/index.php/echo/hello"><a href="http://localhost/sample/index.php/echo/hello">http://localhost/sample/index.php/echo/hello</a></a> にアクセスし、&quot;message = hello&quot; と表示されれば成功です。</p>
+<h3>細かい使いかた</h3>
+<h4>PATH_INFOから複数のパラメータを取得する</h4>
+<p>例:</p>
+<pre><code>'printf_msg =&gt; array(
+    'path' =&gt; 'printf,
+    'path_regexp' =&gt; array(
+        1 =&gt; '|^printf/([^/]*)$|',
+        2 =&gt; '|^printf/([^/]*)/([^/]*)$|',
+    ),
+    'path_ext' =&gt; array(
+        1 =&gt; array(
+            'msg' =&gt; array(),
+        ),
+        2 =&gt; array(
+            'format' =&gt; array(),
+            'param' =&gt; array(),
+        ),
+    ),
+),</code></pre>
+<p>1の正規表現にマッチしたときは'msg'にパラメータを、2にマッチしたときは'format'と'param'にパラメータを入れる、という使いかたができます。</p>
+<h4>path_extのパラメータ</h4>
+<p>'path_ext' =&gt; array('msg' =&gt; array()) の array() の中には、次のパラメータが指定できます。</p>
+<ul>
+<li>input_filter
+<ul>
+<li>PATH_INFOの各パラメータの入力フィルタです。PATH_INFOからフォーム値に変換するときに作用します。Appid_UrlHandlerクラスのメソッド名を指定します。</li>
+</ul></li>
+<li>output_filter
+<ul>
+<li>PATH_INFOの各パラメータの出力フィルタです。フォーム値からPATH_INFOを作るときに作用します。</li>
+</ul></li>
+<li>form_prefix, form_suffix
+<ul>
+<li>input_filter/output_filterのprefix, suffixに特化したフィルタです。入出力時にprefix, suffixを付加／削除します。たとえば実際の値は複雑だが、PATH_INFOでの表現は簡潔にしたいときに指定します。</li>
+</ul></li>
+<li>url_prefix, url_suffix
+<ul>
+<li>form_prefixなどとは逆に、PATH_INFOでの表現を修飾したいときに使います。</li>
+</ul></li>
+</ul>
+<p>なお、PATH_INFO生成はrawurlencode()を用いたエンコードを施します。フィルタなどの処理は上に書いた順に行われ、rawurlencode()はurl_prefix/suffixを付加する直前に実行されます。</p>
+<h4>PATH_INFOの正規化</h4>
+<p>'path_regexp' で指定した正規表現とマッチングされるPATH_INFOは、スラッシュ ('/') の重複と先頭、末尾のスラッシュを取り除いた状態に正規化されています。</p>
+<h4><em>getPath</em>*() の返り値</h4>
+<p>先ほどの例では、 array('/index.php/', array()) という2つの要素を含む配列を返していました。この意味について説明します。(この内容はPATH_INFOを生成するときの話です。)</p>
+<ul>
+<li>1つめの要素
+<ul>
+<li>PATH_INFOにprefixとして付加する文字列。すなわち、エントリポイントのパスになります。</li>
+</ul></li>
+<li>2つめの要素
+<ul>
+<li>リクエストパラメータのうち、PATH_INFOに埋め込むパラメータとそうでないパラメータが存在します。UrlHandlerがパラメータをPATH_INFOに埋め込んだ場合は、そのパラメータをリクエストパラメータ(&quot;?&quot;以降につけるパラメータ)に付加しないようにしなければなりません。2つめの要素に array('foo', 'bar') のように指定すると、実際にPATH_INFOに加えた'foo', 'bar' というパラメータはリクエストパラメータに入らなくなります。(?? ちょっと意図が不明)</li>
+</ul></li>
+</ul>

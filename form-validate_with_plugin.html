@@ -1,0 +1,299 @@
+<h1>フォーム値の自動検証を行う(プラグイン編)</h1>
+<ul>
+<li>概要 </li>
+<li>具体例 </li>
+<li>プラグインを使うかどうかのフラグ </li>
+<li>フォーム定義の解釈 </li>
+<li>フォーム定義のパラメータについて </li>
+<li>後方互換性について </li>
+<li>各バリデータプラグインの詳細 
+<ul>
+<li>Required </li>
+<li>Max, Min, Regexp </li>
+<li>Custom </li>
+<li>File </li>
+</ul></li>
+<li>バリデータプラグインを作る </li>
+</ul>
+<p>書いた人</p>
+<p>| いちい | 新規作成 | - |
+| DQNEO | プラグインの作り方を補足 | 2010-05-30 |</p>
+<h2>フォーム値の自動検証を行う(プラグイン編)</h2>
+<p>Ethna_Plugin_Validatorを使ったフォーム値の検証について説明します。主に，プラグインが導入される以前の方式に慣れている方のための説明です。</p>
+<h3>概要</h3>
+<p>Ethna_ActionForm::validate()に，プラグインを使ったフォーム値の検証処理が追加されました。</p>
+<p>できるかぎり後方互換性を維持しつつ，プラグインを使ってフォーム値の検証処理が簡単に拡張できるようになりました。これまでcustomメソッドを使っていた処理も，プラグイン化することで取り扱いが簡単になるでしょう。</p>
+<h3>具体例</h3>
+<p>Fileプラグインは，アップロードされたファイルの検証に特化した，新たに追加されたプラグインです。</p>
+<p>アクションフォームで</p>
+<pre><code>var $use_validator_plugin = true;
+var $form = array(
+        'sample' =&gt; array(
+            'type' =&gt; VAR_TYPE_FILE,
+            'form_type' =&gt; FORM_TYPE_FILE,
+            'name' =&gt; 'サンプル',
+            'required' =&gt; true,
+            'file_size_max' =&gt; '10KB',
+            'file_type' =&gt; 'text/plain',
+            'file_error' =&gt; 'ファイルが不正です',
+        ),
+    );</code></pre>
+<p>のようにフォームを定義し，アクションクラスで</p>
+<pre><code>function prepare()
+{
+    $this-&gt;af-&gt;validate();
+    return null;
+}</code></pre>
+<p>とすると，「サンプル」フォームは</p>
+<ol>
+<li>typeのチェック</li>
+<li>requiredのチェック</li>
+<li>fileプラグインのチェック
+<ul>
+<li>ファイルサイズは10KB以下</li>
+<li>MIME型はtext/plain</li>
+<li>エラーの場合は「ファイルが不正です」というメッセージ</li>
+</ul></li>
+</ol>
+<p>の順にフォーム値が検証されます。</p>
+<h3>プラグインを使うかどうかのフラグ</h3>
+<p>各アクションフォームごと，もしくはアクションフォームの各フォーム定義ごとにプラグインを使用するかどうかを選択することができます。新規にプロジェクトを作った場合は，デフォルトでプラグインを使ったフォーム値の検証を行うようになります。</p>
+<ul>
+<li>
+<p>各アクションフォームの$use_validator_pluginプロパティ</p>
+<ul>
+<li>この値がtrueに指定されていた場合，validate()はプラグインを使った検証を行います。</li>
+<li>Ethna_ActionForm自体のデフォルトは(現状)falseです。</li>
+</ul>
+</li>
+<li>
+<p>各フォーム定義の 'plugin' 要素</p>
+<p>var $form = array(
+'sample' =&gt; array(
+'plugin' =&gt; true,
+),
+);</p>
+<ul>
+<li>この値がtrueに指定されていた場合，validate()はプラグインを使った検証を行います。</li>
+<li>この値は$use_validator_pluginの指定よりも優先されます。</li>
+</ul>
+</li>
+</ul>
+<p>プラグインを使うように指定した場合，プラグイン化以前のフォーム値検証処理は <strong>実行されない</strong> ことに注意してください。(後方互換性の項も参照してください。)</p>
+<h3>フォーム定義の解釈</h3>
+<p>プラグインを使わない場合，アクションフォームのフォーム定義はEthna_ActionFormの組み込み検証メソッドへの指示でした。プラグインを使う場合は，どのプラグインにどんなパラメータを与えて呼び出すかの指示になります。あらかじめ，組み込み検証メソッドで指定できたすべての要素に相当するプラグインが用意されています。</p>
+<p>以前からあったフォーム定義要素は</p>
+<pre><code>'name', 'required', 'max', 'min', 'regexp', 'custom', 'filter', 'form_type', 'type'</code></pre>
+<p>でした。このうち</p>
+<pre><code>'type', 'form', 'name', 'plugin', 'filter', 'option'</code></pre>
+<p>については，非プラグイン要素として解釈されます*1。</p>
+<p>これ以外の要素については，プラグインを用いたフォーム値の検証を定義していると解釈されます。</p>
+<pre><code>'required' =&gt; true,</code></pre>
+<p>であれば，Requiredプラグインにtrueをパラメータとして検証を指示していることになります。</p>
+<p>また，フォーム値の検証は <strong>その要素を書いた順に</strong> 実行されます。</p>
+<p>なお，実際に呼び出されるValidatorプラグインは，各要素の先頭の1文字目だけを大文字にした名前($name)のプラグインになります。Validatorプラグインの名前($name)には '_' を含むことはできません。</p>
+<h3>フォーム定義のパラメータについて</h3>
+<p>プラグインに渡されるパラメータは，後方互換性を考慮して，すこし複雑な解釈をしています。詳細はEthna_ActionForm::_getPluginDef()を参照してください。</p>
+<ul>
+<li>
+<p>配列で定義する</p>
+<p>'file' =&gt; array(
+'size_max' =&gt; '10KB',
+'type' =&gt; 'text/plain',
+'error' =&gt; 'エラー',
+),</p>
+</li>
+</ul>
+<p>この場合，この配列がそのままパラメータとして Ethna_Plugin_Validator_File::validate() に渡されます。</p>
+<ul>
+<li>
+<p>'_' でつないで定義する (プラグインを使わない場合と互換性のある書き方)</p>
+<p>'required' =&gt; true,
+'required_error' =&gt; 'エラー',</p>
+</li>
+</ul>
+<p>この場合，次のような配列が定義されたとしてプラグインにパラメータとして渡されます。</p>
+<pre><code>'required' =&gt; array(
+                    'required' =&gt; true,
+                    'error' =&gt; 'エラー',
+                   ),</code></pre>
+<h3>後方互換性について</h3>
+<p>あらかじめ用意されたプラグインと，パラメータを 'plugin_param' の形式で指定できることから，プラグインを使わない場合とまったく同様の記法によってプラグインを使ったフォーム定義をすることができます。</p>
+<p>ただしフォーム値の検証順序については，プラグインを使う場合には「書いた順に」実行されるため，まったく同じ動作とはなりませんので注意してください。特にEthna_ActionError::getMessage()は，いちばん最初に発生したエラーを返す仕様となっていたため，エラーが発生した場合のメッセージが変わることがあります。</p>
+<h3>各バリデータプラグインの詳細</h3>
+<h4>Required</h4>
+<p>Requiredプラグインは，(なんでもいいので)値が入力されているかをチェックします。フォームを配列として定義した場合は，配列全体を見渡してチェックすることができます。</p>
+<p>追加で指定できるパラメータは，次の通りです。</p>
+<ul>
+<li>
+<p>error</p>
+<p>'required_error' =&gt; 'エラー',</p>
+<ul>
+<li>エラーが起きたときのメッセージを上書きします。</li>
+</ul>
+</li>
+<li>
+<p>key</p>
+<p>'required_key' =&gt; 'foo',
+'required_key' =&gt; array(0, 1, 'bar'),</p>
+<ul>
+<li>配列フォームの場合に，指定されたkeyが入力されているかをチェックします。</li>
+</ul>
+</li>
+<li>
+<p>num</p>
+<p>'required_num' =&gt; 2,</p>
+<ul>
+<li>配列フォームの場合に，指定された数だけ入力されているかをチェックします。</li>
+</ul>
+</li>
+</ul>
+<h4>Max, Min, Regexp</h4>
+<p>それぞれ，最大値，最小値，正規表現マッチのチェックをします。</p>
+<h4>Custom</h4>
+<p>後方互換性のために用意されました。アクションフォームの指定されたメソッドを呼び出すだけです。</p>
+<h4>File</h4>
+<p>アップロードされたファイルのチェックに特化し，PHP4.2.0以降に追加された，アップロードファイルのエラーコードに対応したエラーメッセージを得ることができます。</p>
+<ul>
+<li>
+<p>error</p>
+<p>'file_error' =&gt; 'エラー',</p>
+<ul>
+<li>エラーが起きたときのメッセージを上書きします。</li>
+</ul>
+</li>
+<li>
+<p>size_max, size_min</p>
+<p>'file_size_max' =&gt; '1kbytes',
+'file_size_min' =&gt; '1KB',</p>
+<ul>
+<li>ファイルサイズのチェックをします。Max, Minプラグインと同様です。</li>
+</ul>
+</li>
+<li>
+<p>type</p>
+<p>'file_type' =&gt; 'text/xml',
+'file_type' =&gt; array('text', 'application/octet-stream'),</p>
+<ul>
+<li>ファイルのMIME型のチェックをします。(信頼できるとは限りません。)</li>
+<li>'text' は 'text/*' と解釈します。</li>
+</ul>
+</li>
+<li>
+<p>name</p>
+<p>'file_name' =&gt; 'sample.txt',
+'file_name' =&gt; '/.*.txt/',</p>
+<ul>
+<li>完全一致または正規表現でファイル名のチェックをします。(あまり使い道はないかもしれません。)</li>
+</ul>
+</li>
+</ul>
+<h3>バリデータプラグインを作る</h3>
+<p>アプリケーション固有のプラグインを作る場合の例を以下に示します。Ethna本体に付属させる形で作りたい場合も基本的に同様で，命名規則の部分がだけが異なります。便利なプラグインができたら、 <a href="pearpackage.html">プラグインパッケージ</a>をつくって公開しましょう。</p>
+<ol>
+<li>名前を決める。
+<ul>
+<li>アルファベット小文字のみからなる適当な名前</li>
+<li>ex. auth</li>
+</ul></li>
+<li>
+<p>命名規則に従い，ファイルとクラスを作る。</p>
+<ul>
+<li>in sample/app/plugin/Validator/Sample_Plugin_Validator_Auth.php:</li>
+</ul>
+<p>class Sample_Plugin_Validator_Auth extends Ethna_Plugin_Validator
+{
+var $accept_array = true;
+...
+}</p>
+<ul>
+<li>$accept_array = true を指定して，配列として定義したフォーム値を配列のまま受け取ると宣言</li>
+</ul>
+</li>
+<li>
+<p>validate()関数を書く。</p>
+<p>function &amp;validate($name, $var, $params)
+{
+$user =&amp; new Sample_User($this-&gt;backend);
+if ($user-&gt;getPassword($var['username']) != $var['password']) {
+// パスワードが一致しなければ、エラーオブジェクトを返す
+return Ethna::raiseNotice($params['error']);
+}</p>
+<pre><code>     return true;
+ }</code></pre>
+</li>
+</ol>
+<ul>
+<li>$name: フォームの名前</li>
+<li>$var: 入力されたフォームの値</li>
+<li>$params: フォーム定義のパラメータ(連想配列)</li>
+</ul>
+<ol>
+<li>
+<p>使い方</p>
+<p>var $form = array(
+'sample' =&gt; array(
+'name' =&gt; '認証フォーム',
+'type' =&gt; array(VAR_TYPE_STRING),
+'form_type' =&gt; FORM_TYPE_TEXT,
+'required' =&gt; true,
+'required_key' =&gt; array('username', 'password'),
+'required_error' =&gt; 'ユーザ名とパスワードを入力してください',
+'auth' =&gt; true,
+'auth_error' =&gt; 'パスワードが合いません',
+),
+...</p>
+<p>&lt;input name=&quot;sample[username]&quot; type=&quot;text&quot; ...
+&lt;input name=&quot;sample[password]&quot; type=&quot;text&quot; ...</p>
+</li>
+</ol>
+<ul>
+<li>最初にrequiredのチェックで配列authのusernameとpasswordの入力を確認</li>
+<li>次にユーザ名からパスワードの確認</li>
+<li>'auth' =&gt; true の部分は，他に 'auth_*' があれば省略可</li>
+</ul>
+<p>その他，親クラス(Ethna_Plugin_Validator)で定義されたプロパティ・メソッドついて簡単に説明します。</p>
+<ul>
+<li>
+<p>$this-&gt;backend</p>
+<ul>
+<li>Ethna_Backendオブジェクト</li>
+</ul>
+</li>
+<li>
+<p>$this-&gt;af</p>
+<ul>
+<li>Ethna_ActionFormオブジェクト</li>
+</ul>
+</li>
+<li>
+<p>$this-&gt;logger</p>
+<ul>
+<li>Ethna_Loggerオブジェクト</li>
+</ul>
+</li>
+<li>
+<p>$this-&gt;accept_array (boolean)</p>
+<ul>
+<li>この値が true のとき，Ethna_ActionFormのバリデート処理は，配列で指定されたフォームを(各配列要素でなく)配列のままプラグインに渡します。</li>
+</ul>
+</li>
+<li>
+<p>$this-&gt;getFormType($name)</p>
+<ul>
+<li>フォームの 'type' 要素(VAR_TYPE_INTなど)を取得します。配列指定の場合は値のみを取得します。</li>
+</ul>
+</li>
+<li>
+<p>$this-&gt;isEmpty($var, $type)</p>
+<ul>
+<li>VAR<em>TYPE</em>* に応じて，フォームの値が空と見なせるかどうかを判定します。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><em>
+\</em>1厳密には，typeはTypeプラグインによって検証されています  </li>
+</ul>
+</li>
+</ul>

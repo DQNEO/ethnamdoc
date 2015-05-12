@@ -1,0 +1,12 @@
+<h1>(ほぼ)スタティックなページを表示させる</h1>
+<h2>(ほぼ)スタティックなページを表示させる</h2>
+<p>ほぼスタティックなページを表示させるのは，簡単です． アクションに対して，アクションクラスでは何もせず，遷移先でスタティックなページを作成します．</p>
+<p>具体的には，</p>
+<pre><code>class Sample_Action_Login extends Ethna_ActionClass
+{
+    function perform()
+    {
+        return 'login';
+    }
+}</code></pre>
+<p>とすることで，なにもしないで，スタティックなloginビューを表示することが可能です．</p>

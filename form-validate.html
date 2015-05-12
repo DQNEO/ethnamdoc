@@ -1,0 +1,207 @@
+<h1>フォーム値の自動検証を行う(基本編)</h1>
+<ul>
+<li>(1) 属性を設定する 
+<ul>
+<li>type属性 </li>
+<li>制限属性 </li>
+<li>VAR_TYPE_DATETIME に関する注意事項 </li>
+<li>VAR_TYPE_STRING の max, min属性に関する注意事項 </li>
+<li>制限属性(配列使用時) </li>
+<li>補足属性 </li>
+<li>属性設定例 </li>
+</ul></li>
+<li>(2) validate()メソッドを実行する </li>
+<li>(3) エラーメッセージを表示する 
+<ul>
+<li>エラーメッセージ一覧 </li>
+<li>特定のフォームに対するエラーメッセージ </li>
+</ul></li>
+<li>補足 </li>
+</ul>
+<h2>フォーム値の自動検証を行う(基本編)</h2>
+<p>クライアントから送信されたフォーム値の検証は、ウェブアプリケーションにおいて重要な、そして面倒な処理の1つです。Ethnaではこの処理を出来る限り手間をかけずに行えるような自動検証機能を提供しています。</p>
+<p>フォーム値の自動検証を行う手順は簡単で、以下のようになります。</p>
+<ol>
+<li>アクションフォームの$formメンバにフォーム値の属性(受け取りたい値の型や最大値等)を設定します</li>
+<li>アクションフォームオブジェクトのvalidate()メソッドを実行します</li>
+<li>エラーメッセージを表示します</li>
+</ol>
+<p>アクションフォームのvalidate()メソッドは、1.で設定した属性に基づいて、入力されたフォーム値を検証し、エラーが発生すると(つまり、属性で指定した制限を超えた値が入力されると)エラーをアクションエラーオブジェクトに登録します*1。</p>
+<p>validate()メソッドは戻り値として発生したエラーの数を返すので、1以上の値が返された場合は入力値でエラーが発生したと判断して、エラー用画面を表示します*2。</p>
+<p>具体的な手順については以下を御覧下さい。</p>
+<h3>(1) 属性を設定する</h3>
+<p>自動検証を行うには、まず属性としてフォーム値の型を指定します。</p>
+<ol>
+<li>type(フォーム値の型)</li>
+</ol>
+<p>そして、自動検証で設定可能な属性は以下の4通りとなります(不要な属性は当然省略可能です)。</p>
+<ol>
+<li>required(必須チェック)</li>
+<li>min(最小文字数(バイト数)チェック)</li>
+<li>max(最大文字数(バイト数)チェック)</li>
+<li>regexp(正規表現によるチェック)</li>
+<li>mbregexp(マルチバイト対応正規表現によるチェック(2.3.2 以降))</li>
+</ol>
+<p>また、補助的な値として以下の2つを設定することが出来ます。</p>
+<ol>
+<li>name(エラーメッセージ表示時等のための、表示用フォーム名)</li>
+<li>form_type(エラーメッセージ表示等のためのフォーム種別*3)</li>
+</ol>
+<p>上記に加えて、任意のメソッドによるチェックも可能です(メールアドレス、URL、アプリケーション固有ID等)。詳細は <a href="form-customvalidate.html">フォーム値の自動検証を行う(カスタムチェック編)</a>を御覧下さい。</p>
+<h4>type属性</h4>
+<p>type属性に設定可能な値は以下の通りとなりますので、受け取りたい値に応じて設定します。型として特に制限を設けない場合にはVAR_TYPE_STRINGを設定します。</p>
+<p>| VAR_TYPE_INT | 整数(+/-) |
+| VAR_TYPE_FLOAT | 小数(+/-) |
+| VAR_TYPE_STRING | 文字列 |
+| VAR_TYPE_DATETIME | 日付(YYYY/MM/DD HH:MM:SS等) |
+| VAR_TYPE_BOOLEAN | 真偽値(1 or 0) |
+| VAR_TYPE_FILE | ファイル |</p>
+<h4>制限属性</h4>
+<p>required/min/max/regexpの各属性はtype属性に設定された値によって意味合いが変化します。詳細は以下の通りです。</p>
+<p>| type属性 | required属性 | min属性 | max属性 | (mb)regexp属性 |
+| VAR_TYPE_INT | 必須チェック | 数値としての最小値 | 数値としての最大値 | 正規表現 |
+| VAR_TYPE_FLOAT | 必須チェック | 数値としての最小値 | 数値としての最大値 | 正規表現 |
+| VAR_TYPE_STRING | 必須チェック | 最小文字(バイト)数 | 最大文字(バイト)数 | 正規表現 |
+| VAR_TYPE_DATETIME | 必須チェック | 入力可能な最も古い日付 | 入力可能な最も新しい日付 | 正規表現 |
+| VAR_TYPE_BOOLEAN | 必須チェック | - | - | - |
+| VAR_TYPE_FILE | 必須チェック | ファイルの最小サイズ(KB) | ファイルの最大サイズ(KB) | - |</p>
+<h4>VAR_TYPE_DATETIME に関する注意事項</h4>
+<p>type 属性に VAR_TYPE_DATETIME を指定する場合は、PHP の <a href="http://jp.php.net/strtotime">strtotime関数</a> が動作する英文形式の入力があることを期待することに注意して下さい。そのため、日本語等のマルチバイト文字が含まれた日付等では max, min 属性は動作しません*4。また、負のUnixタイムスタンプに対応しているかどうか、そしてサポートするタイムスタンプの範囲もプラットフォーム依存です。</p>
+<p>よって、こうした制限事項にひっかかるような日付の入力値の検証を行いたい場合は、VAR_TYPE_DATETIME は使わないで下さい。その場合は、年・月・日 などのフィールドをそれぞれフォーム定義で指定するなどして、カスタムバリデータを書いたほうが無難です。</p>
+<h4>VAR_TYPE_STRING の max, min属性に関する注意事項</h4>
+<p>Ethna 2.5.0 以降では、VAR_TYPE_STRING のフォーム定義に対して maxとmin の属性を設定するとデフォルトで最大（最小）文字数のチェックが行われるようになりました。これに対して 2.3.x より前のバージョンでは、最大（最小）バイト数でチェックを行います。</p>
+<p>2.5.0 以降でバイト数によるチェックを行いたい場合は、 <a href="form-validate-vartypestring.html">VAR_TYPE_STRING の max, min 属性に関する詳細</a> を参照して下さい。</p>
+<h4>制限属性(配列使用時)</h4>
+<p>type属性に <strong>配列が指定されている場合</strong> は、以下のルールに従って自動検証が行われます。</p>
+<ul>
+<li>required属性の場合  </li>
+</ul>
+<p>required 属性を true にすると、配列の場合はデフォルトで <strong>Submitされた配列の全ての要素</strong> が入力されていなければなりません。  </p>
+<p>「特定の数以上の要素」が入力されなければならない場合は、'required' =&gt; true の指定に加え、以下のように _required<em>num</em> 属性を指定します。  </p>
+<pre><code>$form = array(
+    'sample' =&gt; array(
+        'type' =&gt; array(VAR_TYPE_INT),
+        'form_type' =&gt; FORM_TYPE_TEXT,
+        'required' =&gt; true,
+        'required_num' =&gt; 2, // sampleには2個以上の入力が必須
+    ),
+);</code></pre>
+<p>また、特定の要素（例：2番目の要素と3番目の要素）のみ入力を必須にしたい場合もあると思います。その場合は、'required' =&gt; true の指定に加え、以下の通り _required<em>key</em> 要素を指定します。この場合は 最初の要素を「0」として、その後順番に必要な要素の位置を指定します。  </p>
+<pre><code>$form = array(
+    'sample' =&gt; array(
+        'type' =&gt; array(VAR_TYPE_INT),
+        'form_type' =&gt; FORM_TYPE_TEXT,
+        'required' =&gt; true,
+        'required_key' =&gt; array(0,2,4), // 1番目, 3番目, 5番目の要素入力が必須。
+    ),
+);</code></pre>
+<ul>
+<li>required 属性以外の要素は、入力された各要素に対して、指定された属性を満たすかどうかのチェックが行われます。</li>
+</ul>
+<h4>補足属性</h4>
+<p>name属性にはフォームの表示名(フォーム名が'mailaddress'なら'メールアドレス'のようになる)を、form_type属性にはフォームの種別を設定します。form_typeに設定可能な値は以下の通りです。この属性は、フォームヘルパで特に重要です。</p>
+<p><a href="view-form_helper.html">フォームヘルパのページ</a> も参照してください。</p>
+<p>| FORM_TYPE_TEXT | テキストボックス |
+| FORM_TYPE_PASSWORD | パスワード |
+| FORM_TYPE_TEXTAREA | テキストエリア |
+| FORM_TYPE_SELECT | セレクトボックス |
+| FORM_TYPE_RADIO | ラジオボタン |
+| FORM_TYPE_CHECKBOX | チェックボックス |
+| FORM_TYPE_BUTTON | ボタン |
+| FORM_TYPE_FILE | ファイル |
+| FORM_TYPE_HIDDEN | 隠れコントロール |</p>
+<h4>属性設定例</h4>
+<p>以下に、幾つかの設定例を挙げますので、ご参考にして下さい。</p>
+<p>sampleというテキストボックス(表示名「サンプル」)に16〜32文字の英字のみ許可(必須):</p>
+<pre><code>$form = array(
+    'sample' =&gt; array(
+        'name' =&gt; 'サンプル',
+        'required' =&gt; true,
+        'min' =&gt; 16,
+        'max' =&gt; 32,
+        'regexp' =&gt; '/^[a-zA-Z]+$/',
+        'form_type' =&gt; FORM_TYPE_TEXT,
+        'type' =&gt; VAR_TYPE_STRING,
+    ),
+);</code></pre>
+<p>foobar というテキストボックスに、全角ひらがなのみを入力することを許可する場合（必須）<br />
+<strong>regexp 属性と異なり、正規表現にスラッシュを付ける必要がないことに注意して下さい。</strong> *5</p>
+<pre><code>$form = array(
+    'foobar' =&gt; array(
+        'name' =&gt; 'ひらがなのみを許可するテキストボックス',
+        'required' =&gt; true,
+        'mbregexp' =&gt; '^[ぁ-んー]+$', // 正規表現 前後にスラッシュは不要！
+        'mbregexp_encoding' =&gt; 'UTF-8', // マッチさせる文字列のエンコーディング
+        'form_type' =&gt; FORM_TYPE_TEXT,
+        'type' =&gt; VAR_TYPE_STRING,
+    ),
+);</code></pre>
+<p>question[]というチェックボックス(表示名「質問」):</p>
+<pre><code>$form = array(
+    'question' =&gt; array(
+        'name' =&gt; '質問',
+        'form_type' =&gt; FORM_TYPE_CHECKBOX,
+        'type' =&gt; array(VAR_TYPE_BOOLEAN),
+    ),
+);</code></pre>
+<h3>(2) validate()メソッドを実行する</h3>
+<p>上記のようにフォーム値を定義したら、あとはvalidate()メソッドを実行するだけです。validate()メソッドは、各アクションのprepare()メソッドで実行します。具体的には以下のようになります。</p>
+<pre><code>class Sample_Action_LoginDo extends Ethna_ActionClass
+{
+...
+    function prepare()
+    {
+        if ($this-&gt;af-&gt;validate() &gt; 0) {
+            // フォーム値の自動検証でエラーが発生している
+            // -&gt; 再度ログイン画面を表示
+            return 'login';
+        }
+
+        // エラーが無ければnullを返す(引き続いてperform()メソッドが実行される
+        return null;
+    }
+...
+}</code></pre>
+<p>要するに、アクションフォーム(アクションクラスのメンバ変数$action_formあるいは$afとして予め設定されています)のvalidate()メソッドを実行して、1以上の値が返されたら再度入力画面へ遷移すればよいだけです。</p>
+<h3>(3) エラーメッセージを表示する</h3>
+<p>入力画面でエラーが発生したら、当然ですがエラーメッセージを表示させなければなりません。ここではその方法をご説明します。とはいっても、全てのエラーメッセージはSmartyの変数としてアサインされているので、単純にそれの値にアクセスすればよいだけです。</p>
+<p>なお、ここで表示するエラーメッセージは勿論カスタマイズすることが出来ます。詳細は <a href="form-message.html">エラーメッセージをカスタマイズする</a>を御覧下さい。</p>
+<h4>エラーメッセージ一覧</h4>
+<p>何は無くとも全てのエラーメッセージを表示させる場合は、$errors変数を利用します。以下はその典型的な例となります。</p>
+<pre><code>{if count($errors)}
+ &lt;ul&gt;
+  {foreach from=$errors item=error}
+   &lt;li&gt;{$error}&lt;/li&gt;
+  {/foreach}
+ &lt;/ul&gt;
+{/if}</code></pre>
+<h4>特定のフォームに対するエラーメッセージ</h4>
+<p>特定のフォームに対応するエラーメッセージを表示させるにはEthna組み込みのSmarty関数{message}を利用します。</p>
+<p>引数$nameにフォーム名を指定することでフォーム名に対応するエラーメッセージ(無ければ空文字列)が表示されます。以下はその例です:</p>
+<pre><code>&lt;input type="text" name="mailaddress" value="{$form.mailaddress}"&gt;
+{message name="mailaddress"}</code></pre>
+<p>また、特定のフォームでエラーが発生しているかどうかを知るには同じくEthna組み込みのSmarty関数{is_error}を利用します。</p>
+<pre><code>{if is_error('mailaddress')}
+エラー
+{/if}</code></pre>
+<h3>補足</h3>
+<ul>
+<li>最近はフォーム属性をちまちま書くのすら面倒になってきました。もうちょっと楽できないものか考え中です</li>
+<li>
+<p>アプリケーションでSmartyプラグインを追加することで以下のようにもうちょっと楽できます</p>
+<ul>
+<li>エラーだったら<span class="error"></span>で自動で囲ったり、required属性が設定されていたら自動で「(*)」を表示させたりするプラグインを書くことで、より楽をすることも出来ます(僕はしています)</li>
+<li>ついでに<input>タグもある程度自動で出力するプラグインを書くとさらに楽です(こちらはEthna組み込みで提供したいなー、と思っています。JavaScriptコードも自動生成する機能とかもつけて)</li>
+</ul>
+</li>
+<li>
+<ul>
+<li><em>
+*1エラー処理の詳細については <a href="error-policy.html">エラー処理ポリシー</a>等を参照してください<br />
+*2 <a href="tutorial-practice3.html#content_1_4">アプリケーション構築手順(3)</a>も参照してください<br />
+*3例えば、入力値が必須で合った場合のエラーメッセージはテキストボックスなら「入力してください」、セレクトボックスなら「選択してください」というように振り分ける<br />
+*4この件は、代替案がPHP 5.2.6の時点では見つかっていないことから、「仕様」としてプロジェクトとしてはWONTFIX(修正しない) 方針です。代替案の提案がある方は、 <a href="ethna-community.html">IRCやメーリングリスト</a> でお願いします。<br />
+\</em>5UTF-8 な文字列であれば、mbregexp を使わずに、/^ほげ$/u としてもマルチバイト対応の正規表現チェックが利用できます。  </li>
+</ul>
+</li>
+</ul>

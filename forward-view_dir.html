@@ -1,0 +1,18 @@
+<h1>ビュースクリプトの配置ディレクトリを変更する</h1>
+<h2>ビュースクリプトの配置ディレクトリを変更する</h2>
+<p>デフォルトでは、ビュークラスが定義されたスクリプト(ビュースクリプト)はapp/viewに置かれます。このディレクトリはコントローラの$directoryメンバ変数を変更することで任意のディレクトリに設定することが出来るので好み応じて変更してください。</p>
+<p>例えば、アクションスクリプトのディレクトリをデフォルトのapp/viewからviewに変更する場合は以下のように記述します。</p>
+<pre><code>var $directory = array(
+     'action' =&gt; 'app/action',
+     'etc' =&gt; 'etc',
+     'filter' =&gt; 'app/filter',
+     'locale' =&gt; 'locale',
+     'log' =&gt; 'log',
+     'plugins' =&gt; array(),
+     'template' =&gt; 'template',
+     'template_c' =&gt; 'tmp',
+     'tmp' =&gt; 'tmp',
+- 'view' =&gt; 'app/view',
++ 'view' =&gt; 'view',
+  );</code></pre>
+<p>なお、このメンバ変数を相対パスで記述した場合は「アプリケーションベースディレクトリからの相対パス」として扱われます。もちろん絶対パス('/'で始まるパス)で記述することも可能です。</p>

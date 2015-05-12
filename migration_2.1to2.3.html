@@ -1,0 +1,178 @@
+<h1>Ethna 2.1.0 から 2.3.0 への移行ガイド</h1>
+<p>Ethna 2.1.x で作った古いプロジェクトを新しいバージョン 2.3.x 系に対応させるためのガイドラインです。(これに従えばうまくいく、というわけではありません。必ずバックアップを用意した上で、確認しながら作業するようにしてください。)</p>
+<p>※ Ethna 2.3.0 から 2.5.0 への移行については、 <a href="ethna-document-dev_guide-misc-migrate_project230to250.html" title="ethna-document-dev_guide-misc-migrate_project230to250 (737d)">こちら</a> を御覧下さい。</p>
+<ul>
+<li>Ethna 2.1.0 から 2.3.0 への移行ガイド 
+<ul>
+<li>タグの説明 </li>
+<li>[必須]最新バージョンで追加されたファイルをインストールする </li>
+<li>[必須]アプリケーションの基底クラスを使うように変更する </li>
+<li>[必須] アプリケーションマネージャのアクセス方法を変更 </li>
+<li>[必須] Ethna_Renderer導入への対応 </li>
+<li>[任意] Ethna_Pluginで導入されたものを使う </li>
+<li>[使っていれば必須] Ethna_Pluginで廃止されたものを </li>
+<li>[任意] Ethna_UrlHandlerを使う </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | いちい | | |
+| 書いた人 | halt | 2006-11-22 20 | 勝手に編集 |</p>
+<p><strong>この内容はまだ途中です!!</strong></p>
+<h3>タグの説明</h3>
+<ul>
+<li>[必須]は、やっておかないとダメだよね。[任意]を実現するには[必須]が必要</li>
+<li>[任意]は、やる事で上位バージョンの恩恵を受ける事ができるけどやらなくても動くよ。</li>
+<li>[下位互換]は、これをやる事で最新のEthnaを使っていても前と下位と同じ(か似たような)挙動になるよ。</li>
+</ul>
+<h4>[必須]最新バージョンで追加されたファイルをインストールする</h4>
+<p>古いプロジェクトを上書きするようにadd-projectしてください。これにより、新しいEthnaのプロジェクトファイルに必要だが存在しないファイルのみ新規に追加されます。</p>
+<pre><code>$ ls
+sampleapp
+$ ethna add-project sampleapp</code></pre>
+<h4>[必須]アプリケーションの基底クラスを使うように変更する</h4>
+<p>アクションやビューに基底となるクラスを追加する事でアプリケーション全体で利用されるアクションやビューのふるまいを制御する事ができるようになります。</p>
+<ul>
+<li>
+<p>すべてのActionFormの継承先変更</p>
+<p>-class Sampleapp_Form_Index extends Ethna_ActionForm
++class Sampleapp_Form_Index extends Sampleapp_ActionForm</p>
+</li>
+<li>
+<p>すべてのActionの継承先変更</p>
+<p>-class Sampleapp_Action_Index extends Ethna_ActionClass
++class Sampleapp_Action_Index extends Sampleapp_ActionClass</p>
+</li>
+<li>
+<p>すべてのViewの継承先変更</p>
+<p>-class Sampleapp_View_Index extends Ethna_ViewClass
++class Sampleapp_View_Index extends Sampleapp_ViewClass</p>
+</li>
+</ul>
+<p>全てのアクション、ビューのファイルを変更しないといけないので、 &quot;extends Ethna_&quot; などで検索するとかして変更忘れがないように気をつけてください(変更忘れは発見しにくいバグのもとになりやすいです)。</p>
+<ul>
+<li>
+<p>アプリケーションの基底クラスをコントローラに追加する</p>
+</li>
+<li>
+<p>include_onceの追加</p>
+<p>include_once('Ethna/Ethna.php');
+include_once('Sampleapp_Error.php');
++include_once('Sampleapp_ActionClass.php');
++include_once('Sampleapp_ActionForm.php');
++include_once('Sampleapp_ViewClass.php');</p>
+<p>/*<em>
+</em></p>
+</li>
+<li>
+<p>クラスの追加</p>
+<p>'config' =&gt; 'Ethna_Config',
+'db' =&gt; 'Ethna_DB_PEAR',
+'error' =&gt; 'Ethna_ActionError',</p>
+<ul>
+<li>'form' =&gt; 'Ethna_ActionForm',</li>
+<li>'form' =&gt; 'Sampleapp_ActionForm',
+'i18n' =&gt; 'Ethna_I18N',
+'logger' =&gt; 'Ethna_Logger',</li>
+<li>'plugin' =&gt; 'Ethna_Plugin',
+'session' =&gt; 'Ethna_Session',
+'sql' =&gt; 'Ethna_AppSQL',</li>
+<li>'view' =&gt; 'Ethna_ViewClass',</li>
+<li>'view' =&gt; 'Sampleapp_ViewClass',</li>
+<li>'renderer' =&gt; 'Ethna_Renderer_Smarty',</li>
+<li>'url_handler' =&gt; 'Sampleapp_UrlHandler',</li>
+</ul>
+</li>
+</ul>
+<h4>[必須] アプリケーションマネージャのアクセス方法を変更</h4>
+<p>class factory(Ethna_ClassFactory)の汎用化により、Ethnaで登場する多くのクラスがEthna_ClassFactory経由で取得されるようになりました。これにより、クラスのソースファイが統一された基準で自動的に検索され、統一されたインタフェースでオブジェクトを取得できるようになりました(くわしくは <a href="ethna-document-dev_guide-classfactory.html" title="ethna-document-dev_guide-classfactory (1240d)">クラスファクトリ</a>を参照)。</p>
+<p>これに伴い、いままでアクション(Ethna_ActionClassの継承クラス)、ビュー(Ethna_ViewClass)、アプリケーションオブジェクト(Ethna_AppObject)では自動的にオブジェクトのプロパティに設定されていましたが、これが廃止されました。</p>
+<p>コントローラの</p>
+<pre><code>var $manager = array(
+    'un' =&gt; 'User',
+);</code></pre>
+<p>といった記述をして、アクションなどで</p>
+<pre><code>$this-&gt;um-&gt;doSomething();</code></pre>
+<p>などとしている場合、次のように書き換えてください。</p>
+<pre><code>$um =&amp; $this-&gt;backend-&gt;getManager('User');
+$um-&gt;doSomething();</code></pre>
+<p>なお、アプリケーションマネージャはオブジェクト作成時にデータベースに(設定されていれば)接続しますが、これによって必要時に初めて接続するように変更されたことになります。</p>
+<h4>[必須] Ethna_Renderer導入への対応</h4>
+<p>これまでEthnaはSmartyに依存した作りになっていましたが、Ethna_Rendererの導入により、レンダラというレイヤを挟んで1段抽象化されました。まだSmartyに依存した部分がコントローラなどにいくつか残っていますが、今後改良される予定です。</p>
+<p>大きな違いとして、Ethna_ViewClassがSmartyオブジェクトを直接持つのを止めて、RendererオブジェクトがSmartyを持つようにし、さらにRendererオブジェクトはEthna_ClassFactoryが管理するように変更されました。アプリのビュークラスの中で直接Smartyオブジェクトを操作していた場合、</p>
+<pre><code>$this-&gt;smarty-&gt;assign('foo', $bar);</code></pre>
+<p>次のように修正してください。</p>
+<pre><code>$renderer =&amp; $this-&gt;_getRenderer();
+$smarty =&amp; $renderer-&gt;getEngine();
+$smarty-&gt;assign('foo', $bar);</code></pre>
+<p>一度$rendererを取得するのが手間ですが、assignのような、多くのレンダラに共通であろうものについてはEthna_Rendererクラスでメソッドが用意されています。</p>
+<pre><code>$renderer =&amp; $this-&gt;_getRenderer();
+$renderer-&gt;setProp('foo', $bar);</code></pre>
+<p>ここで、setProp()は各テンプレートエンジンごとの「レンダラに値を設定」するプロキシメソッドです。詳細は <a href="ethna-document-dev_guide-renderer.html" title="ethna-document-dev_guide-renderer (1240d)">Ethna_Rendererの使いかた</a>を参照してください。</p>
+<h4>[任意] Ethna_Pluginで導入されたものを使う</h4>
+<p>新たに追加された機能で、Ethna_Pluginを利用したものについてまとめておきます。おもに、似たような枠組でさまざまな機能を用意したいもの、アプリケーション側で手軽に拡張を追加したくなるようなものがプラグイン化されています。詳しくは各説明ページと <a href="ethna-document-dev_guide-plugin.html" title="ethna-document-dev_guide-plugin (737d)">Ethna_Pluginのつかいかた</a>を参照してください。</p>
+<ul>
+<li>Cachemanager
+<ul>
+<li>キャッシュ機構です。(ドキュメント未整備)</li>
+</ul></li>
+<li>Csrf
+<ul>
+<li>CSRF対策のためのプラグイン。 <a href="ethna-document-dev_guide-csrf.html" title="ethna-document-dev_guide-csrf (1240d)">クロスサイトリクエストフォージェリの対策コードについて</a>を参照。</li>
+</ul></li>
+<li>Filter
+<ul>
+<li>Ethna_Filterがプラグインになったものです。 <a href="ethna-document-dev_guide-app-filterchain.html" title="ethna-document-dev_guide-app-filterchain (1240d)">フィルタチェインを使用する</a>を参照(内容が古いまま)</li>
+</ul></li>
+<li>Validator
+<ul>
+<li>フォーム値の検証をするプラグインです。 <a href="ethna-document-dev_guide-form-validate_with_plugin.html" title="ethna-document-dev_guide-form-validate_with_plugin (513d)">フォーム値の自動検証を行う(プラグイン編)</a>を参照。</li>
+</ul></li>
+<li>Logwriter
+<ul>
+<li>ログ出力のプラグインです。 <a href="ethna-document-dev_guide-log.html" title="ethna-document-dev_guide-log (874d)">ログ</a>を参照。</li>
+</ul></li>
+</ul>
+<h4>[使っていれば必須] Ethna_Pluginで廃止されたものを</h4>
+<p>Ethna_Plugin導入に伴い、フィルタ、ethnaコマンドのハンドラなど、多くのものがプラグイン化されました。アプリ側で対象となるクラスを直接使っていた場合に修正が必要になりますが、そのような場面は非常に少ないと思いますので[任意]としました。</p>
+<ul>
+<li>
+<p>Ethna_Filter (実行時フィルタ、ExecutionTimeなどのこと)</p>
+<ul>
+<li>Plugin/Ethna_Plugin_Filter.php に移行しました。後方互換性のため Ethna_Filter.php はそのまま残っていますが、将来的に廃止される予定なのでプラグインへ移行しておくことをお薦めします。</li>
+</ul>
+</li>
+<li>
+<p>Ethna_LogWriter</p>
+<ul>
+<li>廃止され、全面的に Plugin/Ethna_Plugin_Logwriter.php に移行しました。 $ETHNA_HOME/class/LogWriter/ 以下に自作の Logwriter を作っていた場合は、プラグインへの移行作業が必要になります。</li>
+</ul>
+</li>
+<li>
+<p>Ethna_CacheManager</p>
+<ul>
+<li>実装の大部分がEthna_Plugin_Cachemanagerに移動しました。Ethna_CacheManager.php は残っていますが、プラグインを呼び出すだけになりました。</li>
+</ul>
+</li>
+<li>
+<p>Ethna_SkeltonGenerator</p>
+<ul>
+<li>廃止され、Ethna_Generator.php と Plugin/Ethna_Plugin_Generator.php に移行しました。</li>
+</ul>
+</li>
+<li>Ethna_Handle
+<ul>
+<li>Plugin/Ethna_Plugin_Handle.php へのプラグイン化とともにハンドラ自体も改良されたため、かなり内容が変わっています。</li>
+</ul></li>
+</ul>
+<h4>[任意] Ethna_UrlHandlerを使う</h4>
+<p>Ethna-2.3.0の新機能の目玉の一つはEthna_UrlHandlerの導入です。</p>
+<p>エントリポイントに実行したいアクションを指示するために、これまでは</p>
+<pre><code>http://example.jp/index.php?action_foo=true&amp;param=bar</code></pre>
+<p>のように &quot;action_アクション名&quot; という名前のリクエスト変数を設定する必要がありました。この挙動はコントローラの _getActionName_Form() というメソッドをオーバーライドすることで変更できましたが、必ずしもわかりやすいものではありませんでした。</p>
+<p>Ethna_UrlHandlerクラスはエントリポイント、path infoと、アクション名、リクエストパラメータとの対応を定義することで、相互の変換を可能にするものです。たとえば</p>
+<pre><code>http://example.jp/index.php/action/foo/param/bar</code></pre>
+<p>というURIと</p>
+<ul>
+<li>アクション: foo</li>
+<li>パラメータ: param=bar という情報とを相互に変換することができます。</li>
+</ul>
+<p>詳細については、 <a href="ethna-document-dev_guide-urlhandler.html" title="ethna-document-dev_guide-urlhandler (926d)">PATH_INFOを使ったRequest-URIからのパラメータの取得</a>を参照してください。</p>

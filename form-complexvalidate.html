@@ -1,0 +1,8 @@
+<h1>フォーム値の自動検証を行う(複合チェック編)</h1>
+<p>参考 <a href="http://ml.ethna.jp/pipermail/users/2005-March/000012.html">[Ethna-users:00012] </a></p>
+<h2>フォーム値の自動検証を行う(複合チェック編)</h2>
+<p>「条件付きでrequired」というような場合は、アクションフォームのprepare()でvalidate()を実行する「前」で、フォーム値の判別によって</p>
+<pre><code>if (...) {
+  $this-&gt;af-&gt;form['bill']['required'] = true;
+}</code></pre>
+<p>みたいなことをしています。</p>

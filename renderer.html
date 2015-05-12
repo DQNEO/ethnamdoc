@@ -1,0 +1,55 @@
+<h1>Ethna_Rendererの使い方</h1>
+<ul>
+<li>はじめに </li>
+<li>Ethna_Rendererについて </li>
+<li>Ethna_Renderer_Smartyについて </li>
+<li>他のテンプレートエンジンの実装の仕方 </li>
+<li>テンプレートエンジンのデフォルト設定 
+<ul>
+<li>Ethna-2.1.2 まで </li>
+</ul></li>
+</ul>
+<h2>Ethna_Rendererの使い方</h2>
+<h3>はじめに</h3>
+<ul>
+<li>Ethnaでは，レンダラが指定されたテンプレートを読み込み，処理されたデータを埋め込んでページを生成しています．</li>
+<li>ページ生成の処理を行うレンダラは，開発者の好みに合わせて変更することが可能です．</li>
+<li>デフォルトでは，レンダラとしてSmartyが使われています．</li>
+</ul>
+<h3>Ethna_Rendererについて</h3>
+<ul>
+<li>Ethna_Rendererはバージョン2.3.0から実装されています．</li>
+<li>事実上開発途上で、smartyを使った例しかありません。今後Ethna_Renderer_Flexyなどが用意される予定です。</li>
+</ul>
+<h3>Ethna_Renderer_Smartyについて</h3>
+<p>Ethna_Renderer_SmartyはSmartyをEthna_Rendererの仕様に合わせてラッピングしたものです． 基本的にはSmartyと同じ機能が使えます．（まだ未実装のものもあります．近々実装の予定です．）</p>
+<h3>他のテンプレートエンジンの実装の仕方</h3>
+<p>Smarty以外のテンプレートエンジンを使いたい場合，Ethna_Rendererを継承して，新しいレンダラクラスをつくります． 基本的な流れは，以下のとおりです．</p>
+<ol>
+<li>Ethna_Rendererを継承して，独自のレンダラクラスをつくる.</li>
+<li>($App)_Controllerで1で作成したレンダラクラスをインクルードする．</li>
+<li>($App)_Controllerのクラスファクトリ($class)の'renderer'に1で作成したレンダラクラスを指定する．</li>
+</ol>
+<h3>テンプレートエンジンのデフォルト設定</h3>
+<p>テンプレートエンジンの共通変数などを設定する場合は、アプリケーションのビューの基底クラス Appid_ViewClass にある _setDefault() メソッドを実装してください。</p>
+<pre><code>function _setDefault(&amp;$renderer)
+{
+    //Rendererからテンプレートエンジンを取得
+    $smarty =&amp; $renderer-&gt;getEngine();
+
+    // セッション情報をセット
+    $smarty-&gt;assign_by_ref('session_name', session_name());
+    $smarty-&gt;assign_by_ref('session_id', session_id());
+
+    // smartyテンプレートのデリミタを変更
+    $smarty-&gt;left_delimiter = '&lt;!--{';
+    $smarty-&gt;right_delimiter = '}--&gt;';
+}</code></pre>
+<p>$renderer は Ethna_Renderer の継承クラスのインスタンスで、デフォルトでは Ethna_Renderer_Smarty です。 getEngine() メソッドで smarty のインスタンスを取得することができます。</p>
+<h4>Ethna-2.1.2 まで</h4>
+<p>上の設定は Ethna-2.3.0 以降で Renderer が導入された場合の話ですが、 2.1.2 以前の場合は、アプリケーションのコントローラ Appid_Controller の _setDefaultTemplateEngine() メソッドで以下のように設定してください。 ($smartyはそのままsmartyオブジェクトです)</p>
+<pre><code>function _setDefaultTemplateEngine(&amp;$smarty)
+   {
+       $smarty-&gt;assign_by_ref('session_name', session_name());
+       $smarty-&gt;assign_by_ref('session_id', session_id());
+   }</code></pre>

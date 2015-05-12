@@ -1,0 +1,43 @@
+<h1>エラーレベルに応じて共通の画面を表示させる</h1>
+<h2>エラーレベルに応じて共通の画面を表示させる</h2>
+<p>Ethnaフレームワークでは，全てのエラーをコントローラのhandleErrorメソッドで処理しています． デフォルトでは，ログ出力とアラーとメール送信の処理がEthna_Controllerで定義されています．</p>
+<pre><code>/**
+        * エラーハンドラ
+        *
+        * エラー発生時の追加処理を行いたい場合はこのメソッドをオーバーライドする
+        * (アラートメール送信等−デフォルトではログ出力時にアラートメール
+        * が送信されるが、エラー発生時に別にアラートメールをここで送信
+        * させることも可能)
+        *
+        * @access public
+        * @param object Ethna_Error エラーオブジェクト
+        */
+       function handleError(&amp;$error)
+       {
+               // ログ出力
+               list ($log_level, $dummy) = $this-&gt;logger-&gt;errorLevelToLogLevel($error-&gt;getLevel());
+               $message = $error-&gt;getMessage();
+               $this-&gt;logger-&gt;log($log_level, sprintf("%s [ERROR CODE(%d)]", $message, $error-&gt;getCode()));
+       }</code></pre>
+<p>エラー発生時にこれ以外の処理を行いたい場合，{アプリケーションID}_ControllerにhandleErrorを定義し，オーバーライドすることで，任意の処理を追加することが可能です．</p>
+<p>例として，エラーレベルが'Error'の場合に「ただ今混雑しています」と表示させるには，app/{アプリケーションID}_Controller.phpに下記を追加します。</p>
+<pre><code>/**
+        * エラーハンドラ
+        *
+        * @access public
+        * @param object Ethna_Error エラーオブジェクト
+        */
+       function handleError(&amp;$error)
+       {
+               // ログ出力
+               list ($log_level, $dummy) = $this-&gt;logger-&gt;errorLevelToLogLevel($error-&gt;getLevel());
+               $message = $error-&gt;getMessage();
+               $this-&gt;logger-&gt;log($log_level, sprintf("%s [ERROR CODE(%d)]", $message, $error-&gt;getCode()));
+
+               //    
+               // template/ja/error.tpl に「ただ今混雑しています」
+               // と書いておく
+               //
+               $renderer = $this-&gt;getRenderer();
+               $renderer-&gt;perform('error.tpl');
+       }</code></pre>

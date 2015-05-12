@@ -1,0 +1,86 @@
+<h1>フォーム値の自動検証を行う(カスタムチェック編)</h1>
+<ul>
+<li>カスタムチェックの利用方法 
+<ul>
+<li>カスタムチェックメソッドの引数 </li>
+<li>カスタムチェックメソッドのエラー処理 </li>
+</ul></li>
+</ul>
+<h2>フォーム値の自動検証を行う(カスタムチェック編)</h2>
+<p>当然ですが、値の最小値や最大値、正規表現だけで全ての入力をチェックできるケースばかりとは限りません。アプリケーションによって、数々のパターンの入力チェックが必要になることと思います。</p>
+<h3>カスタムチェックの利用方法</h3>
+<p>この場合、アプリケーション固有のメソッドでチェックを行うことも可能で、具体的な手順は以下のようになります。</p>
+<ol>
+<li>フォーム値の'custom'属性にメソッド名を記述する</li>
+<li>1.で指定したメソッドをアクションフォームクラスに定義する</li>
+</ol>
+<p>1.については簡単で:</p>
+<pre><code>/**
+ * @access private
+ * @var array フォーム値定義
+ */
+var $form = array(
+    'sample' =&gt; array(
+        'name' =&gt; 'サンプル',
+        'required' =&gt; true,
+        'custom' =&gt; 'checkSample',
+        'type' =&gt; VAR_TYPE_STRING,
+    ),
+);</code></pre>
+<p>のように'custom' =&gt; 'メソッド名'とするだけです。次に、同じくアクションフォームにcheckSampleという名前でメソッドを定義します。</p>
+<pre><code>/**
+ * チェックメソッド: サンプル
+ *
+ * @access public
+ * @param string $name フォーム項目名
+ */
+function checkSample($name)
+{
+    if (strtotime($this-&gt;form_vars[$name]) &gt; time()) {
+        $this-&gt;ae-&gt;add($name, "{form}には未来の時間を入力してください", E_FORM_INVALIDVALUE);
+    }
+}</code></pre>
+<p>以下に、チェックメソッドについて順に解説していきます。</p>
+<h4>カスタムチェックメソッドの引数</h4>
+<p>カスタムチェックメソッドは1つの引数$nameを取ります。ここにはチェックすべきフォーム名が指定されます。ですので、チェックすべきフォーム値には</p>
+<pre><code>$this-&gt;form_vars[$name]</code></pre>
+<p>でアクセスできるということになります。</p>
+<h4>カスタムチェックメソッドのエラー処理</h4>
+<p>フォーム値を検証して、エラーが発生した場合にはアクションエラーオブジェクトを利用してエラーを追加します。具体的には、上記の例の通り</p>
+<pre><code>$this-&gt;ae-&gt;add([フォーム名], [エラーメッセージ], [エラーコード]);</code></pre>
+<p>となります。フォーム名には迷わず$nameを指定して問題ありません。また、エラーコードは以下のいずれか、あるいはアプリケーション定義の任意のエラーコードを指定することが出来ますが、通常はE_FORM_INVALIDVALUEあるいはE_FORM_INVALIDCHARで問題ありません。</p>
+<ul>
+<li>E_FORM_WRONGTYPE_SCALAR(フォーム値型エラー(スカラー引数に配列指定))</li>
+<li>E_FORM_WRONGTYPE_ARRAY(フォーム値型エラー(配列引数にスカラー指定))</li>
+<li>E_FORM_WRONGTYPE_INT(フォーム値型エラー(整数型))</li>
+<li>E_FORM_WRONGTYPE_FLOAT(フォーム値型エラー(浮動小数点数型))</li>
+<li>E_FORM_WRONGTYPE_DATETIME(フォーム値型エラー(日付型))</li>
+<li>E_FORM_WRONGTYPE_BOOLEAN(フォーム値型エラー(BOOL型))</li>
+<li>E_FORM_WRONGTYPE_FILE(フォーム値型エラー(FILE型))</li>
+<li>E_FORM_REQUIRED(フォーム値必須エラー)</li>
+<li>E_FORM_MIN_INT(フォーム値最小値エラー(整数型))</li>
+<li>E_FORM_MIN_FLOAT(フォーム値最小値エラー(浮動小数点数型))</li>
+<li>E_FORM_MIN_STRING(フォーム値最小値エラー(文字列型))</li>
+<li>E_FORM_MIN_DATETIME(フォーム値最小値エラー(日付型))</li>
+<li>E_FORM_MIN_FILE(フォーム値最小値エラー(ファイル型))</li>
+<li>E_FORM_MAX_INT(フォーム値最大値エラー(整数型))</li>
+<li>E_FORM_MAX_FLOAT(フォーム値最大値エラー(浮動小数点数型))</li>
+<li>E_FORM_MAX_STRING(フォーム値最大値エラー(文字列型))</li>
+<li>E_FORM_MAX_DATETIME(フォーム値最大値エラー(日付型))</li>
+<li>E_FORM_MAX_FILE(フォーム値最大値エラー(ファイル型))</li>
+<li>E_FORM_REGEXP(フォーム値文字種(正規表現)エラー)</li>
+<li>E_FORM_INVALIDVALUE(フォーム値数値(カスタムチェック)エラー)</li>
+<li>E_FORM_INVALIDCHAR(フォーム値文字種(カスタムチェック)エラー)</li>
+<li>E_FORM_CONFIRM(確認用エントリ入力エラー)</li>
+</ul>
+<p>最後に、エラーメッセージにはユーザ向けに表示したいエラーメッセージを指定します。なお、ここで「{form}」と記述するとフォーム表示名に置換されます。</p>
+<p>なお、Ethna_ActionFormには予め以下のようなカスタムメソッドが定義されています。</p>
+<ul>
+<li>checkVendorChar: 機種依存文字</li>
+<li>checkBoolean: bool値</li>
+<li>checkMailaddress: メールアドレス</li>
+<li>checkURL: URL</li>
+</ul>
+<p>例えばメールアドレスのチェックを行うには</p>
+<pre><code>'custom' =&gt; 'checkMailaddress',</code></pre>
+<p>と指定します。</p>

@@ -1,0 +1,19 @@
+<h1>&quot;.ethna&quot;ファイルについて</h1>
+<h3>2種類の&quot;.ethna&quot;ファイル</h3>
+<p>ethnaコマンドは、&quot;.ethna&quot;ファイルを読み込むことによりその設定の変更を行うことができます。 .ethnaファイルには二種類ありそれぞれ2つの意味があります。</p>
+<h4>ユーザのホームディレクトリに置かれる&quot;.ethna&quot;ファイル</h4>
+<p>これは、いわゆる.bash_rcなどと同じような意味合いのファイルで、ethnaコマンドの挙動を変更する項目があります。</p>
+<p>/.ethnaの記述例 ([ethna]は適当 )</p>
+<pre><code>[ethna]
+author = "username &lt;username@exsample.com&gt;"</code></pre>
+<p>現在は、以下の項目が設定可能です。</p>
+<dl class="list1" style="padding-left:16px;margin-left:16px">
+<dt>author</dt>
+<dd>作成者を設定します。この設定は、自動生成されるコード上のコメント作成者情報を上書きします。</dd>
+</dl>
+<h4>プロジェクトのディレクトリに置かれる&quot;.ethna&quot;ファイル</h4>
+<p>これは、ethnaコマンドがプロジェクト固有のファイル((ActionとかView ))を作る時に参照するファイルです。基本的に弄る必要はありません。</p>
+<p>{project_name}/.ethna:</p>
+<pre><code>[project]
+controller_file = "app/Sample_Controller.php"
+controller_class = "Sample_Controller"</code></pre>

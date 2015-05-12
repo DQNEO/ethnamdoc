@@ -1,0 +1,234 @@
+<h1>Ethna でのログ出力を制御する</h1>
+<p>Ethna では、実行時に様々なログを出力することができます。これは開発時、リリース後の双方に必要な出力を考慮して設計されており、ログレベルを変えることで様々なニーズに応えることができます。</p>
+<p>ここでは、Ethna でサポートしているログ出力について説明します。</p>
+<ul>
+<li>Ethna でのログ出力を制御する 
+<ul>
+<li>ログ出力の設定方法 </li>
+<li>ログレベルについて </li>
+<li>ログの出力方式と出力オプション </li>
+<li>echo </li>
+<li>file </li>
+<li>syslog </li>
+<li>Alertmail </li>
+<li>default </li>
+<li>ログ出力のフィルタ </li>
+<li>プログラムでログ出力を制御する方法 </li>
+<li>Ethna_Logger へ直接指示する </li>
+<li>Ethna::raiseError() が実行されたとき </li>
+<li>trigger_error() や fatal errorなどが発生したとき </li>
+<li>ログ出力設定のサンプル </li>
+<li>ログをファイルに出力する </li>
+<li>ログレベルに応じてアラートメールを送信させる </li>
+<li>アプリ開発中の詳細なログ </li>
+<li>公開する本番環境のログ </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | ------ | ---------- | 新規作成 |
+| 書いた人 | mumumu | 2009-05-24 | 最新版に追随する形で全面的に修正 |</p>
+<h3>ログ出力の設定方法</h3>
+<p>アプリケーションの etc/[アプリケーションID]-ini.php の $config グローバル変数に 'log' というキーで設定を記述します。その中にログ出力方式をキーとして設定を記述していきます。</p>
+<p>共通のログ設定については log_option, log_filter_do, log_filter_ignoreにて設定可能です。</p>
+<pre><code>$config = array( 
+
+     'log' =&gt; array(
+         // 各ログ出力方式に応じた設定
+         'echo' =&gt; array( // ログ出力法式(ここではecho)
+             'level' =&gt; 'notice', // ログレベル
+             'option' =&gt; 'pid,function,pos', // ログ出力オプション
+         ),
+         //
+         // ログ出力方式は複数設定可能
+         //
+     ),
+
+     // グローバルな設定は以下のように設定可能
+     'log_option' =&gt; 'pid,function,pos', // ログ出力オプション
+     'log_filter_do' =&gt; '', // マッチしたログを出力
+     'log_filter_ignore' =&gt; 'Undefined index.*%%.*tpl', // 無視するパターン
+ );</code></pre>
+<h3>ログレベルについて</h3>
+<p>ログレベルは、出力する情報の重要度をあらわすものです。Ethnaでは、 「LOG_」 というプレフィックスがついたPHPの定数が定義されています。</p>
+<p>また、PHPスクリプトのパースエラー等のPHP組み込みのエラーについては、それらのエラーレベルに対応するログレベルが定義されています。利用できるログレベルは、緊急度の順に以下の通りです。</p>
+<p>Ethna では、設定されたログレベルより高いレベルのログを出力するようになっているので注意して下さい。たとえば、alert に設定した場合は alert と emerg は出力されますが、notice レベルのログは出力されません。</p>
+<p>| ログレベル | 設定ファイルへの記述 | 説明 | 対応するPHPの組み込みエラーレベル |
+| LOG_EMERG | emerg | システムが使用不可となるような状態 | ----- |
+| LOG_ALERT | alert | 対応が直ちに必要な緊急の状態 | ----- |
+| LOG_CRIT | crit | システムに対して致命的な影響があるもの | E_PARSE |
+| LOG_ERR | err | エラーが発生する条件 | E_ERROR, E_USER_ERROR |
+| LOG_WARNING | warning | 警告が発生する条件 | E_WARNING, E_USER_WARNING |
+| LOG_NOTICE | notice | 通常の動作だが、特徴的な条件 | E_NOTICE, E_USER_NOTICE, E_STRICT |
+| LOG_INFO | info | 情報を与えたい場合 | ----- |
+| LOG_DEBUG | debug | デバッグ時の情報を与えたい場合 | 上記以外の全て |</p>
+<p>ログレベルの決定方針は明確ではありませんが、LOG_NOTICE までは、アプリケーションとして正常な動作でも発生することがあります(フォーム値の検証でエラーが発生した場合など)。また、LOG_DEBUGレベルでは、Ethna内部で実行される情報がかなり詳細に出力されます(ethnaコマンドなど)。</p>
+<h3>ログの出力方式と出力オプション</h3>
+<p>Ethna_LoggerはLogwriterプラグインを使ってログの出力をします。Logwriterプラグインには以下の5通りが用意されています。それぞれのオプションについてはログの設定方法の項を参照してください。</p>
+<h4>echo</h4>
+<p>アプリケーションの実行画面(ブラウザ等)にそのまま表示します。具体的には、ログ出力が指示された段階でPHPの echo関数 を実行します。設定は以下のようにします。</p>
+<pre><code>'log' =&gt; array(
+    'echo' =&gt; array(
+        // ログレベルを設定。
+        // 「ログレベルについて」の項を参照
+        'level' =&gt; 'notice',
+        // pid, function, pos を カンマ区切りで指定
+        // pid : pid を記録
+        // function : 関数名を記録
+        // pos : ログを出力したファイル名と行を記録する
+        'option' =&gt; 'pid,function,pos',
+    ),</code></pre>
+<h4>file</h4>
+<p>アプリケーションのログディレクトリにログファイル (標準ではlog/appid.log)を作って出力します。設定は以下のようにします。</p>
+<pre><code>'log' =&gt; array(
+    'file' =&gt; array(
+        // ログレベルを設定。
+        // 「ログレベルについて」の項を参照
+        'level' =&gt; 'notice',
+        // pid, function, pos を カンマ区切りで指定
+        // pid : pid を記録
+        // function : 関数名を記録
+        // pos : ログを出力したファイル名と行を記録する
+        'option' =&gt; 'pid,function,pos',
+        // ログ出力ファイル名の設定
+        // デフォルトは [アプリケーションID].log 
+        'file' =&gt; 'hoge.log',
+        // 上記の'file' が指定されていない場合、デフォルトの
+        // [アプリケーションID].log を出力するディレクトリを指定
+        // デフォルトは Ethna_Controller の log ディレクトリに
+        // 指定したもの
+        'dir' =&gt; '....',
+        // ログファイルのパーミッション(chmodします)
+        // デフォルトは666
+        'mode' =&gt; '666',
+    ),</code></pre>
+<h4>syslog</h4>
+<p>syslogを使ってログを出力します。出力先は syslog の設定、及びプラットフォームによって異なります。設定は以下のようにしますが、使い方は echo のものと同様です。</p>
+<pre><code>'log' =&gt; array(
+    'syslog' =&gt; array(
+        // ログレベルを設定。
+        // 「ログレベルについて」の項を参照
+        'level' =&gt; 'notice',
+        // pid, function, pos を カンマ区切りで指定
+        // pid : pid を記録
+        // function : 関数名を記録
+        // pos : ログを出力したファイル名と行を記録する
+        'option' =&gt; 'pid,function,pos',
+    ),</code></pre>
+<h4>Alertmail</h4>
+<p>ログの内容を指定されたアドレスにメールで送信します。1回のログにつき1通のメールが送信され、backtraceが付加されます。緊急事態が発生したときなどに使います。設定は以下のようにします。</p>
+<pre><code>'log' =&gt; array(
+    'alertmail' =&gt; array(
+        // ログレベルを設定。
+        // 「ログレベルについて」の項を参照
+        'level' =&gt; 'crit',
+        // pid, function, pos を カンマ区切りで指定
+        // pid : pid を記録
+        // function : 関数名を記録
+        // pos : ログを出力したファイル名と行を記録する
+        'option' =&gt; 'pid,function,pos',
+        // 送信先のメールアドレスを設定
+        // カンマで区切って複数指定可能
+        'mailaddress' =&gt; 'alert@ml.example.jp, bhoge@ml.example.com',
+    ),</code></pre>
+<h4>default</h4>
+<p>何もしません。設定では 'default' を というキーを使いますが、これを使用することはないでしょう。</p>
+<h3>ログ出力のフィルタ</h3>
+<p>各ログの出力方式の設定には、'filter_do', 'filter_ignore' というキーでそれぞれ「マッチするログを出力する」, 「出力しない」、を設定できます。たとえば echoの設定を例にとると、以下のようになります。</p>
+<pre><code>'log' =&gt; array(
+    'echo' =&gt; array(
+        // ログレベルを設定。
+        // 「ログレベルについて」の項を参照
+        'level' =&gt; 'notice',
+        // pid, function, pos を カンマ区切りで指定
+        // pid : pid を記録
+        // function : 関数名を記録
+        // pos : ログを出力したファイル名と行を記録する
+        'option' =&gt; 'pid,function,pos',
+        // マッチするログのみを出力
+        // 設定が空ならば、全て出力されます。
+        'filter_do' =&gt; '',
+        // マッチしたものを無視する
+        'filter_ignore' =&gt; 'Undefined index.*%%.*tpl',
+    ),</code></pre>
+<h3>プログラムでログ出力を制御する方法</h3>
+<p>Ethna では基本的にEthna_Loggerクラスを使ってアプリケーションのログを管理していますが、出力されるタイミングは以下の3つがあります。</p>
+<h4>Ethna_Logger へ直接指示する</h4>
+<p>Ethna_Logger クラスは、Ethna_Controller, Ethna_Backend から以下の形で取得できます。</p>
+<pre><code>// Ethna_Controller から直接取得する
+$ctl =&amp; Ethna_Controller::getInstance();
+$logger = $ctl-&gt;getLogger();
+
+// Ethna_Backend から取得する(アクションクラス、ビュークラス上で有効
+$logger =&amp; $backend-&gt;getLogger();</code></pre>
+<p>こうして取得した Ethna_Loggerクラスのインスタンスに対して、ログレベルとメッセージを引数として以下の形で直接指示します。エラー関連の処理については <a href="error.html">エラー処理</a> のページも参照してください。</p>
+<pre><code>// NOTICE レベルのメッセージを出力
+$logger-&gt;log(LOG_NOTICE, "メッセージ");</code></pre>
+<h4>Ethna::raiseError() が実行されたとき</h4>
+<pre><code>$errobj =&amp; Ethna::raiseError("エラーだよ[%s]", E_USER_ERROR, $err_submsg);</code></pre>
+<h4>trigger_error() や fatal errorなどが発生したとき</h4>
+<pre><code>trigger_error("大変だ！エラーだよ！");</code></pre>
+<h3>ログ出力設定のサンプル</h3>
+<p>ここでは、ログ出力設定の典型的な例についていくつか紹介します。</p>
+<h4>ログをファイルに出力する</h4>
+<p>ログをファイルに出力するには、「file」という名前をキーにして設定を記述します。以下は、/tmp/hoge.log にパーミッション666で、noticeレベル以上のログを出力します。</p>
+<p>通知するレベルを変更するには、level の値を変更します。 <a href="log.html#md5faa05">ログレベルの説明</a>も参照して下さい。</p>
+<pre><code>$config = array(
+    'log' =&gt; array(
+        'file' =&gt; array(
+            'level' =&gt; 'notice',
+            'option' =&gt; 'pid,function,pos',
+            'file' =&gt; 'hoge.log',
+            'dir' =&gt; '/tmp',
+            'mode' =&gt; '666',
+        ),
+    ),</code></pre>
+<h4>ログレベルに応じてアラートメールを送信させる</h4>
+<p>以下のようにして、メールの送信先のメールアドレスを記述します。<br />
+カンマで区切って複数のメールアドレスが指定できます。</p>
+<p>通知するレベルを変更するには、level の値を変更します。 <a href="log.html#md5faa05">ログレベルの説明</a>も参照して下さい。</p>
+<pre><code>$config = array(
+    'log' =&gt; array(
+        'alertmail' =&gt; array(
+            'level' =&gt; 'err',
+            'mailaddress' =&gt; 'alert@ml.example.jp',
+        ),</code></pre>
+<h4>アプリ開発中の詳細なログ</h4>
+<p>方針: typoを発見するためにLOG_NOTICEレベル(E_NOTICEを出力するレベル)まで画面に表示し、fileにはデータベースに問い合わせた全てのSQL文を出力する。</p>
+<pre><code>$config = array( 
+
+     'debug' =&gt; true,
+     // ....
+     'log' =&gt; array(
+         'echo' =&gt; array(
+             'level' =&gt; 'notice',
+             'option' =&gt; 'pid,function,pos',
+             'filter_do' =&gt; '',
+             'filter_ignore' =&gt; 'Undefined index.*%%.*tpl',
+         ),
+         'file' =&gt; array(
+             'level' =&gt; 'debug',
+             'option' =&gt; 'pid,function,pos',
+             'filter_do' =&gt; '',
+             'filter_ignore' =&gt; 'Undefined index.*%%.*tpl',
+         ),
+      ),</code></pre>
+<h4>公開する本番環境のログ</h4>
+<p>方針: とにかく画面にはなにも表示しない。回避可能だが意図した動作になっていないなどのLOG_WARNINGレベルはファイルに出力。データベースに接続できないなどの緊急時に発生するLOG_ERRレベルのログはメールでアラート用メーリングリストに送信する。</p>
+<pre><code>$config = array( 
+
+    'debug' =&gt; false,
+    // ...
+    'log' =&gt; array(
+        'echo' =&gt; array(
+            'level' =&gt; 'crit',
+        ),
+        'file' =&gt; array(
+            'level' =&gt; 'warning',
+        ),
+        'alertmail' =&gt; array(
+            'level' =&gt; 'err',
+            'mailaddress' =&gt; 'alert@ml.example.jp',
+        ),
+    ),
+    'log_option' =&gt; 'pid,function,pos',
+    'log_filter_do' =&gt; '',
+    'log_filter_ignore' =&gt; 'Undefined index.*%%.*tpl',</code></pre>

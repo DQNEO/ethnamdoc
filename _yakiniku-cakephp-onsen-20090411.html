@@ -1,0 +1,137 @@
+<h1>Ethna オフラインミーティング @Cake開発合宿</h1>
+<p>箱根で行われた CakePHP 開発合宿にて、Ethnaのコミッタが集う機会がありました。その際に行われた議論を以下に残しておきます。</p>
+<ul>
+<li>Ethna オフラインミーティング @Cake開発合宿 
+<ul>
+<li>Ethna_ActionForm#validate + フィルタの実行タイミング </li>
+<li>JavaScript の連携 </li>
+<li>フォームヘルパについて </li>
+<li>ドキュメント </li>
+<li>プラグイン読み込み順序の変更 </li>
+<li>tarball 配布パッケージ化 </li>
+<li>複数定義にまたがる ActionForm 定義の記述法 </li>
+<li>skel ファイルの命名規則 </li>
+<li>拡張子を判断した View の挙動変更 </li>
+<li>ViewHelper の汎用化 </li>
+<li>各自の作業内容 </li>
+<li>mumumu </li>
+<li>sotarok </li>
+<li>ichii386 </li>
+<li>maru_cc </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | mumumu | 2009-04-11 | 新規作成 |</p>
+<h3>Ethna_ActionForm#validate + フィルタの実行タイミング</h3>
+<ul>
+<li>現在はActionFormのvalidateメソッド実行時に、filter定義を実行してから、validateを実行している。
+<ul>
+<li>このフィルタ実行のタイミングはもっとユーザが制御できてもいいのではないか</li>
+<li>validateせずにfilter定義のみを実行したいというニーズもあるはず</li>
+<li>フィルタ処理をメソッドとして独立させればよいのではないか</li>
+</ul></li>
+</ul>
+<h3>JavaScript の連携</h3>
+<ul>
+<li>JavaScriptの連携がもっとあってもいいはず
+<ul>
+<li>js ファイルが定義されていたら勝手にincludeしてくれるとか</li>
+</ul></li>
+</ul>
+<h3>フォームヘルパについて</h3>
+<ul>
+<li>{form} で生成されるタグにid属性つけてもよくね？
+<ul>
+<li>それは配列を使うフォームでおかしくなる場合がある（CHECKBOX, RADIO等）のでやらない</li>
+</ul></li>
+<li>booleanなcheckboxをuncheckedでpostしてもpostされない(?)ので、default値を設定するとそれで上書きされてしまう</li>
+</ul>
+<h3>ドキュメント</h3>
+<ul>
+<li>entrypoint, configのurl, mod_rewriteとかの設定のサンプル</li>
+<li>環境差異の設定サンプル</li>
+</ul>
+<h3>プラグイン読み込み順序の変更</h3>
+<p>これは，やる． extlibディレクトリの配置とか．(sotarok)</p>
+<ul>
+<li><a href="https://sourceforge.jp/ticket/browse.php?group_id=1343&amp;tid=15930"><a href="https://sourceforge.jp/ticket/browse.php?group_id=1343&tid=15930">https://sourceforge.jp/ticket/browse.php?group_id=1343&tid=15930</a></a></li>
+</ul>
+<h3>tarball 配布パッケージ化</h3>
+<p>(sotarok) これも，やる</p>
+<ul>
+<li><a href="https://sourceforge.jp/ticket/browse.php?group_id=1343&amp;tid=15931"><a href="https://sourceforge.jp/ticket/browse.php?group_id=1343&tid=15931">https://sourceforge.jp/ticket/browse.php?group_id=1343&tid=15931</a></a></li>
+</ul>
+<h3>複数定義にまたがる ActionForm 定義の記述法</h3>
+<ul>
+<li>required_if とか(sotarok)</li>
+<li>DBが絡むものは手をつけない．とりあえずaf内でできることだけ</li>
+</ul>
+<h3>skel ファイルの命名規則</h3>
+<p>決定したい．</p>
+<ul>
+<li>skel/action.foo.php</li>
+<li>skel/view.foo.php とかとか</li>
+</ul>
+<h3>拡張子を判断した View の挙動変更</h3>
+<p>たとえば， <a href="http://example.com/hoge/fuga"><a href="http://example.com/hoge/fuga">http://example.com/hoge/fuga</a></a> などでは，デフォルトのヘッダとデフォルトのテンプレート (たとえば， fuga.tpl) で， <a href="http://example.com/hoge/fuga.js"><a href="http://example.com/hoge/fuga.js">http://example.com/hoge/fuga.js</a></a> でアクセスすると， js用のヘッダ，fuga.js.tpl を探す，など．</p>
+<p>URLハンドラーがかかってくるのでURLハンドラーの変更のがあってからかな？と． 案くらいはまとめたい</p>
+<h3>ViewHelper の汎用化</h3>
+<p>ViewHelperが現状は Smartyプラグインとして実装されているため、他の Rendererに変更しづらい ViewHelperの機能は、ViewHelperとして個別のプラグインに分割する Smartyのプラグインとしての register 方法は要検討 ＞Smartyを継承して プラグインサーチの方法を拡張する？</p>
+<h3>各自の作業内容</h3>
+<h4>mumumu</h4>
+<ul>
+<li>Ethna Viewまわりの改善(4/11中に済ませる,required)</li>
+<li>動的フォームAPIの追加(フォームヘルパ用, required)</li>
+<li>チケット潰し(required)</li>
+<li>ORMの改善（optional)</li>
+</ul>
+<h4>sotarok</h4>
+<ul>
+<li>プラグイン読み込み順序の変更</li>
+<li>tarball 配布パッケージ化</li>
+<li>複数定義にまたがる ActionForm 定義の記述法</li>
+<li>book.ethna.jp は仕様きめて作り出す</li>
+</ul>
+<h4>ichii386</h4>
+<ul>
+<li>現状にcatch up</li>
+<li>ドキュメント整備(catch upしつつ)</li>
+<li>
+<select>のoptgroup対応
+</li>
+</ul>
+<h4>maru_cc</h4>
+<ul>
+<li>新規プロジェクト時のエントリポイントのフルパスを相対パスに
+<ul>
+<li><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&amp;tid=16089"><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16089">http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16089</a></a></li>
+</ul></li>
+<li>add-entry-point の挙動も要変更ではないか？
+<ul>
+<li>あと、作成すると同盟の actionを作ろうとするのは変なのでは？</li>
+<li><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&amp;tid=16102"><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16102">http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16102</a></a></li>
+</ul></li>
+<li>Ethna_Renderer_Php.php Ethna_Renderer_Flexy.php とか
+<ul>
+<li>Smartyプラグインにべったりな部分を ViewHelperとして切り出したい</li>
+<li>プラグインの仕様変更の話が出たのでそれ次第</li>
+</ul></li>
+<li>ethnaコマンドが縦に長すぎる件をなんとかする
+<ul>
+<li><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&amp;tid=16093"><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16093">http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16093</a></a></li>
+</ul></li>
+<li>存在しない action名を指定された場合に app/action 以下を全includeをなんとかしたい
+<ul>
+<li>テストがapp/action以下にあることも関係しているが、不正なアクセス時に全ファイル読み込みという状況が発生してしまっている</li>
+<li><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&amp;tid=16094"><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16094">http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16094</a></a></li>
+</ul></li>
+<li>testを別ディレクトリ、appと並列なtestディレクトリに移動したい</li>
+<li>add-project 時に、APPIDのディレクトリを自動作成する挙動を無くしたい
+<ul>
+<li>APPIDを固定にしようかという話が議題に出ていまして、それにも関係するかと思ってます</li>
+<li><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&amp;tid=16103"><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16103">http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16103</a></a></li>
+</ul></li>
+<li>APPID_Controller.php から var $smarty_xxx_plugin 関連の定義を消したい
+<ul>
+<li><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&amp;tid=16107"><a href="http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16107">http://sourceforge.jp/ticket/browse.php?group_id=1343&tid=16107</a></a></li>
+</ul></li>
+</ul>

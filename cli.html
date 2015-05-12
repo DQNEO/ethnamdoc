@@ -1,0 +1,106 @@
+<h1>Ethna で コマンドラインから利用するスクリプトを書く。</h1>
+<p>Webアプリケーション を書いていると、コマンドラインから利用するスクリプトを書きたくなるときがあるかもしれません。たとえばバッチ処理や、データベースのテストデータ生成等、Webアプリケーションのメインの処理からは外れた、細々とした処理が考えられます。</p>
+<p>たとえば、「データベースのデータを集計して集計用のテーブルに書き込む」という一定時間毎に実行する単純なバッチ処理を考えてみましょう。新たに接続処理やクエリを流す処理を <strong>独自に書きたくない</strong> なぁと思いませんか？ こうした場合は、既にあるフレームワークの枠組みを使い回せると便利な場合があります。</p>
+<p>Ethna は、こうした場合もきちんと考慮して設計されています。<br />
+以下では、Ethnaの枠組みを利用しつつ、コマンドラインスクリプトを書く方法を説明します。</p>
+<ul>
+<li>Ethna で コマンドラインから利用するスクリプトを書く。 
+<ul>
+<li>コマンドライン用のアクションスクリプトを生成する </li>
+<li>コマンドラインで実行する処理を書く </li>
+<li>コマンドライン用のエントリポイントを作成する </li>
+<li>実行してみる </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | 日付 | 備考 |
+| mumumu | 2007-02-15 | 初版 |
+| DQNEO | 2010-05-31 | 一部言い回しを修正 |</p>
+<h3>コマンドライン用のアクションスクリプトを生成する</h3>
+<p>まずは、通常のアクションスクリプト生成と似た方法で、コマンドライン用のアクションスクリプトを生成します。<br />
+今回は上で集計バッチを例に出したので、batch_sum_daily というアクションを考えてみましょう。いつもの通り、ethna コマンドを使います。</p>
+<pre><code>$ ethna add-action -g cli batch_sum_daily
+file generated [/tmp/sample/skel/skel.action_cli.php -&gt; 
+[/tmp/sample/app/action_cli/Batch/Sum/Daily.php]
+action script(s) successfully created
+[/tmp/sample/app/action_cli/Batch/Sum/Daily.php]</code></pre>
+<p>「add-action」に加えて、「-g cli」というオプションを付けると、コマンドライン用のアクションスクリプトが action_cli ディレクトリ以下に生成されます。</p>
+<h3>コマンドラインで実行する処理を書く</h3>
+<p>あとは、上記で生成されたスクリプトのアクションクラスに、処理*1 を書きましょう。*2 ここでは、DB接続等、既存の Ethna の 枠組みをそのまま使うことが出来ます。*3</p>
+<p>今回は説明のため、「Hello World!!」と表示させるだけにしてみます。<br />
+コマンドライン引数を読むには、通常のPHPでCLIで用いる場合と同様、グローバル変数 $argc, $argv を利用して下さい。</p>
+<pre><code>/**
+ * batch_sum_dailyアクションの実装
+ *
+ * @author {$author}
+ * @access public
+ * @package Sample
+ */
+class Sample_Cli_Action_BatchSumDaily extends Sample_ActionClass
+{
+    /**
+     * batch_sum_dailyアクションの前処理
+     *
+     * @access public
+     * @return string 遷移名(正常終了ならnull, 処理終了ならfalse)
+     */
+    function prepare()
+    {
+        //
+        // あなたの好きな前処理を書いて下さい！
+        //
+        // 但し、コマンドライン引数をEthnaはパースしないこと
+        // に注意して下さい。渡されたコマンドライン引数を
+        // ActionFormに入れてくれるわけではありません！！
+        //
+        // コマンドライン引数を読むには、通常のPHPでCLIを用
+        // いる場合と同様、グローバル変数 $argc, $argv を利
+        // 用して下さい。
+        //
+        // @see http://ml.ethna.jp/pipermail/users/2008-January/000872.html
+        //
+    }
+
+    /**
+     * batch_sum_dailyアクションの実装
+     *
+     * @access public
+     * @return string 遷移名
+     */
+    function perform()
+    {
+        //
+        // あなたの好きなメイン処理を書いて下さい！
+        // 以下のように、Ethna 内で使ってきたやり方が
+        // そのまま使えます！
+        //    
+        // ただし実際に開発するときはメインの処理は
+        // appマネジャーなどに記述し、
+        // アクションクラスはそれらを単純に呼び出す
+        // のみにするのがオススメです。
+        //
+        //$db = $this-&gt;backend-&gt;getDB();
+        //$rs = $db-&gt;query('SELECT * FROM test');
+        //var_dump($rs);
+
+        echo "Hello World!!\n";
+    }
+}
+?&gt;</code></pre>
+<h3>コマンドライン用のエントリポイントを作成する</h3>
+<p>アクションクラスを書いたら、あとはそれを呼び出す部分を作るだけです。以下のように、上で生成した batch_sum_daily アクションを 呼び出すスクリプトを任意の場所に作ります。</p>
+<pre><code>&lt;?php
+require_once '/tmp/sample/app/Sample_Controller.php';
+
+Sample_Controller::main_CLI('Sample_Controller', 'batch_sum_daily');
+?&gt;</code></pre>
+<p>2行目でrequire_once している、コントローラークラスのスクリプトへの絶対パスは絶対に間違わないように注意して下さい。*4<br />
+4行目が、実際のアクションを呼び出す部分です。[APP_ID]_Controller クラスの main_CLI メソッドは、第一引数に コントローラークラスの名前、第二引数に呼び出すアクション名を指定します。</p>
+<p>今回はこれを、/tmp/batch_sum_daily.php という名前で保存することにします。</p>
+<h3>実行してみる</h3>
+<p>上で保存したエントリポイントのスクリプトを実行してみましょう。うまくいけば「Hello World!!」と表示されるはずです。</p>
+<pre><code>php -f /tmp/batch_sum_daily.php</code></pre>
+<hr />
+<p>*1ただし、アクションクラスにロジックを長々と書くのはおすすめしません。 <a href="tutorial-practice3.html#x9a32944">tutorial-practice3.html#x9a32944</a><br />
+*2アクションフォームクラスも生成されますが、コマンドラインを解釈してEthnaがフォーム定義に突っ込んでくれるわけではないので、役に立ちません<br />
+*3後で述べるエントリポイントさえ間違わなければ、ですが。<br />
+*4これが プロジェクト の app ディレクトリと lib ディレクトリに include_path を通してくれているので、間違うとEthna の機構が全て使えなくなって終了、、です。  </p>

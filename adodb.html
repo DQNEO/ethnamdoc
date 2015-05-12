@@ -1,0 +1,61 @@
+<h1>ADODBをEthnaで使う</h1>
+<ul>
+<li>はじめに </li>
+<li>ADODB を Ethna のプロジェクトにインストール </li>
+<li>コントローラークラスの書き換え </li>
+<li>dsn の設定 </li>
+<li>実際に使ってみる </li>
+</ul>
+<p>| 書いた人 | 日付 | 備考 |
+| mumumu | 2007-02-14 | 初版 |</p>
+<h2>ADODBをEthnaで使う</h2>
+<h3>はじめに</h3>
+<p><a href="http://adodb.sourceforge.net/">ADODB</a> は、デフォルトで Ethna で利用できる <a href="http://pear.php.net/manual/ja/package.database.db.php">PEAR::DB</a> に比してスピードが速いと言われており*1、使いやすいAPI が実装されている PHP 4/5 に対応したデータベースアクセスライブラリです。ここでは、そのADODBをEthnaで使う方法を説明します。</p>
+<p>このドキュメントは、以下の作業が完了していることを前提にして書かれています。仮に以下の作業が完了していなければ、下のリンクを参考に作業を行っておいてください。</p>
+<ul>
+<li><a href="tutorial-install_guide.html">Ethna のインストール</a></li>
+<li><a href="tutorial-practice1.html#ud75ed71">Ethna のプロジェクトを生成する</a></li>
+</ul>
+<p>以下では、プロジェクトの アプリケーションID が「sample」、アプリケーション配置ディレクトリを /tmp として説明を行います。<br />
+あなたのプロジェクトに合わせて適宜読み替えるようにして下さい。</p>
+<h3>ADODB を Ethna のプロジェクトにインストール</h3>
+<p>まずは ADODB を sourceforge.net から <a href="http://adodb.sourceforge.net/#download">ダウンロード</a>します。<br />
+PHP 4/5 対応版*2 の出来るだけ最新のものを取得すると良いでしょう。</p>
+<p>ダウンロードしたら、任意の場所に展開します。ここでは、執筆時点での最新版 4.94 を使います。</p>
+<pre><code>unzip adodb494.zip
+tar xvfz adodb494.tgz</code></pre>
+<p>すると、adodb というディレクトリができると思いますので、それを プロジェクトの lib ディレクトリ以下に移動します。</p>
+<pre><code>mv adodb /tmp/sample/lib/</code></pre>
+<p>これで ADODB を Ethna のプロジェクトにインストールできました。*3</p>
+<h3>コントローラークラスの書き換え</h3>
+<p>インストール作業が終わったら、app/Sample_Controller.php の以下の部分を書き換えます。</p>
+<pre><code>/**
+    * @var array クラス定義
+    */
+   var $class = array(
+       /*
+        * TODO: 設定クラス、ログクラス、SQLクラスをオーバーライド
+        * した場合は下記のクラス名を忘れずに変更してください
+        */
+       'class' =&gt; 'Ethna_ClassFactory',
+       'backend' =&gt; 'Ethna_Backend',
+       'config' =&gt; 'Ethna_Config',
+- 'db' =&gt; 'Ethna_DB_PEAR',
++ 'db' =&gt; 'Ethna_DB_ADOdb',</code></pre>
+<h3>dsn の設定</h3>
+<p>Ethna の通常のDBアクセスと同じく、etc/sample-ini.php の dsn を設定しておいて下さい。</p>
+<pre><code>$config = array(
+   'debug' =&gt; false,
+   'dsn' =&gt; 'mysql://user:pass@unix+localhost/dbname',
+);</code></pre>
+<p>これで Ethna で ADODB を使う準備は整いました。</p>
+<h3>実際に使ってみる</h3>
+<p>あとは、通常のデータベースアクセスと使い方は同じです。但し、ADODB を使用しているので、アクセスのAPI は Ethna_DB_ADOdb クラスのそれに従います。*4 <a href="doc/Ethna/Ethna_DB_ADOdb.html">クラスリファレンス</a>を参考にして、利用してみて下さい。</p>
+<pre><code>$db = $this-&gt;backend-&gt;getDB();
+$rs = $db-&gt;query('SELECT * FROM test');
+var_dump($rs);</code></pre>
+<hr />
+<p>*1PEAR::DB より <a href="http://phplens.com/lens/adodb/">速いといわれる根拠の一例</a>。ベンチマークの結果はともかく、データベースへのアクセス速度を決定付ける最も重要な要素はDBスキーマやインデックス等の DB設計にあると思います。<br />
+*2sourceforge では adodb-バージョン番号-for-php4-and-5 のような名前が付いています。また、本ドキュメント執筆時点で、PHP5 専用のバージョンはまだベータ版です。<br />
+*3adodb の配布物には、多様な用途に合わせて多数のファイルが含まれています。 <a href="http://phplens.com/lens/adodb/docs-adodb.htm#mininstall">Minimum Install</a>のページを参考にして、あなたの用途に照らして不要なものは削除しておくと良いでしょう。<br />
+*4Ethna では実際に使用しているDBアクセスライブラリは、総じて見事に隠蔽されています。  </p>

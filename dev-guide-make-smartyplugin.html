@@ -1,0 +1,72 @@
+<h1>Smartyプラグインの作成</h1>
+<p>ここでは、Ethna 向けの Smarty プラグインの作成方法を説明します。</p>
+<ul>
+<li>Smartyプラグインの作成 
+<ul>
+<li>Smartyプラグインの種別 </li>
+<li>Ethna 2.5.0 以降のやり方 </li>
+<li>プラグインの作成 </li>
+<li>プラグインの登録と使い方 </li>
+<li>Ethna 2.3.x 以前のやり方 </li>
+<li>クラスのメソッドをSmartyFunctionとして登録する方法 </li>
+<li>smartyの流儀でfunction, modifierなどを登録する </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | mumumu | 2009-06-21 | 新規作成 |</p>
+<h3>Smartyプラグインの種別</h3>
+<p>Smarty のプラグインには様々な種類がありますが、原理的にEthnaでは全ての種類のSmartyプラグインを使うことができます。</p>
+<p>主に使われるのはブロックプラグイン、関数プラグイン、修正子プラグインの3種類でしょう。</p>
+<h3>Ethna 2.5.0 以降のやり方</h3>
+<h4>プラグインの作成</h4>
+<p>すべての種類の Smartyプラグインが Ethna で利用可能です。</p>
+<p>Smartyプラグインの作成方法については、 <a href="http://www.smarty.net/manual/ja/plugins.php">Smarty のマニュアル</a> をご覧下さい。</p>
+<h4>プラグインの登録と使い方</h4>
+<p>app/Plugin/Smarty 以下に作成したプラグインを置いておけば、自動で Smartyプラグインの探索パスを通してあるため、ここに置いたプラグインは自動でEthnaが探してくれるようになっています。</p>
+<p>よって、hoge プラグインを例にすると、以下のようにしてすぐに使うことができます。</p>
+<pre><code>{$app.test|hoge}
+{hoge}
+{hoge}{/hoge}</code></pre>
+<h3>Ethna 2.3.x 以前のやり方</h3>
+<h4>クラスのメソッドをSmartyFunctionとして登録する方法</h4>
+<p>以下のように配列で指定することでクラスのメソッドをsmarty_functionとして登録することが可能です。</p>
+<pre><code>179 /**
+   180 * @var array smarty function定義
+   181 */
+   182 var $smarty_function_plugin = array(
+   183 /*
+   184 * TODO: ここにユーザ定義のsmarty function一覧を記述してください
+   185 *
+   186 * 記述例：
+   187 *
+   188 * 'smarty_function_foo_bar',
+   189 */
+   190 array('HasteSmartyPlugins', 'form_name'),
+   191 array('HasteSmartyPlugins', 'form_input'),
+   192 array('HasteSmartyPlugins', 'rss'),</code></pre>
+<p>従来はグローバルの関数名を書いた文字列を列挙するが、クラスのメソッドの場合、</p>
+<pre><code>array('クラス名', 'メソッド')</code></pre>
+<p>とした配列を列挙する。*1</p>
+<h4>smartyの流儀でfunction, modifierなどを登録する</h4>
+<p>smartyは特定のディレクトリにsmartyの流儀でファイルを作れば自動的にmodifierなどを見付けてくれます。上の方法は、smartyの流儀によらずにアプリで用意したクラス関数をsmarty functionに登録するための方法です。</p>
+<p>smartyの流儀に従う場合は、App_Controllerの中でファイルを置くディレクトリを指定します。たとえばアプリのlibディレクトリにsmartyディレクトリを用意する場合は、以下のように指定してください。</p>
+<ul>
+<li>
+<p>lib/smarty/function.sample.php (smarty functionを定義したファイル)</p>
+<p>function smarty_function_sample($params, &amp;$smarty)
+{
+...
+}</p>
+</li>
+<li>
+<p>app/App_Controller.php</p>
+<p>var $directory = array(
+...
+'plugins' =&gt; array('lib/smarty'), // ファイルを置いてあるディレクトリ
+...
+);</p>
+</li>
+</ul>
+<p>smartyテンプレート内で {sample foo=bar} のように書くと、smartyはlib/smartyディレクトリ内から自動的にsample関数の定義を見付けてくれます。(くわしくはSmarty自体のドキュメントを参照してください)</p>
+<p><strong>注意</strong> : この場合、$smarty_function_pluginのほうは指定 <strong>しない</strong> でください。指定すると、smartyはファイルを探さなくてもどこかに関数が定義されていると思い、「関数が見付からない」といったエラーを出すかもしれません。</p>
+<hr />
+<p>*1このあたりはsmartyのregister_functionメソッドのマニュアルを参照  </p>

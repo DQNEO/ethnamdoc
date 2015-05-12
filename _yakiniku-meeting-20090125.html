@@ -1,0 +1,205 @@
+<h1>Ethna 焼肉会議 議事録</h1>
+<p>2009年1月25日に、焼肉をつつきながらEthna について話す会が開かれました。非常に中身が濃く、有意義なものでした。</p>
+<p>その議事録を以下にアップします。こうした議論を元に、これからのEthnaの進化にご期待下さい。</p>
+<ul>
+<li>Ethna 焼肉会議 議事録 
+<ul>
+<li>DBレイヤの抽象化 </li>
+<li>プラグインどうする？ </li>
+<li>View の扱い方と連携に関する考え方 </li>
+<li>Ethna_Session </li>
+<li>認証(Auth) の機構はなんとかしたい </li>
+<li>URLHandler </li>
+<li>サンプルを増やす努力 </li>
+<li>ドキュメント </li>
+<li>マーケティング </li>
+<li>チケットシステムどうする? </li>
+<li>新しいコミッタ。新しい流れを </li>
+<li>番外編 </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | mumumu | 2009-01-26 | 新規作成 |</p>
+<h3>DBレイヤの抽象化</h3>
+<ul>
+<li>何がなくとも最優先。2.5.0 preview4 に。
+<ul>
+<li>これを実現し、様々なライブラリやインターフェイスをプラガブルにする -&gt; 最優先</li>
+</ul></li>
+<li>AppObject 捨てでいいと思う
+<ul>
+<li>捨てるとして、既存のORMを取り込むか、ライブラリを使うかを決める</li>
+<li>ActionForm との連携をとりやすくするのが何よりも重要</li>
+<li>ActionForm は、複数の項目を連携するための仕組みがない。カスタムチェックもありだけど、'required_if' =&gt; 'hoge &gt; 5 AND fuga &lt; 0' のように、項目を連携するValidate の仕組みもありではないか</li>
+</ul></li>
+</ul>
+<h3>プラグインどうする？</h3>
+<ul>
+<li>DB の次に優先度が高い</li>
+<li>名前空間が複数（master, local) があり、ユーザがどう扱ってよいか分からない
+<ul>
+<li>アプリケーションローカルなプラグインを、グローバルなプラグインより優先させ、オーバライドしたいとの思いで作った仕組み(いちい)</li>
+<li><a href="http://d.hatena.ne.jp/ichii386/20090126/1232911256"><a href="http://d.hatena.ne.jp/ichii386/20090126/1232911256">http://d.hatena.ne.jp/ichii386/20090126/1232911256</a></a></li>
+<li>名前空間は最小限（ひとつ）にするべきだと思う。上記のオーバライドは、優先度をコントロールすれば実現できることではないか</li>
+<li>ロードする順番を再検討すること</li>
+<li>アプリケーションID, lib(extlib?) 以下、Ethna本体くらいか</li>
+<li>extlib加える？</li>
+</ul></li>
+<li>ユーザがインストールしやすい仕組みに
+<ul>
+<li>置いてちょっと設定すれば動くくらいでないと</li>
+</ul></li>
+<li>ロードする機構は考え直さないとダメだろ
+<ul>
+<li>getPlugin('hoge') は若気の至りだったとの某氏の告白</li>
+<li>少なくともrequireはダメだろ</li>
+<li>Cake のコンポーネント風？ 書けばロードされる感じ</li>
+<li>Ethnaのプラグイン機構が確立したらbakeryのようなサイトも欲しいよね</li>
+</ul></li>
+</ul>
+<h3>View の扱い方と連携に関する考え方</h3>
+<ul>
+<li>Ethna_ViewClass はコンテキストに依存した値を処理することで、If 文を action や テンプレートに書くのを極力防ぐための仕組みです。
+<ul>
+<li>その意味で、Viewは不要とは思えないが、Actionや ActionForm(フォームヘルパ）等との連携を改良する必要がある</li>
+<li>View と ActionForm の連携にはフォームヘルパを使うべき。サンプルを増やす努力を。</li>
+<li><a href="http://ml.ethna.jp/pipermail/users/2009-January/001092.html"><a href="http://ml.ethna.jp/pipermail/users/2009-January/001092.html">http://ml.ethna.jp/pipermail/users/2009-January/001092.html</a></a></li>
+<li>アクションからViewに値をどうしても渡したい場合、call_user_func_array を使う案はどうか(sotarok)</li>
+<li><a href="http://d.hatena.ne.jp/sotarok/20090125/1232900121"><a href="http://d.hatena.ne.jp/sotarok/20090125/1232900121">http://d.hatena.ne.jp/sotarok/20090125/1232900121</a></a></li>
+</ul></li>
+<li>複数テンプレートを組み合わせられるように改良したい
+<ul>
+<li>Ethna_Renderer#perform(true) を使えば、テンプレートの出力を取り出せるので、それを再度 assign する形で。</li>
+</ul></li>
+<li>汎用Viewの実現
+<ul>
+<li>汎用のものは取り込む方向で</li>
+<li>JSON</li>
+<li>ステータスコードを吐くView</li>
+<li>リダイレクトビュー</li>
+<li><a href="http://d.hatena.ne.jp/sotarok/20090125/1232900121"><a href="http://d.hatena.ne.jp/sotarok/20090125/1232900121">http://d.hatena.ne.jp/sotarok/20090125/1232900121</a></a></li>
+<li><a href="http://d.hatena.ne.jp/okonomi/20090125/1232876245"><a href="http://d.hatena.ne.jp/okonomi/20090125/1232876245">http://d.hatena.ne.jp/okonomi/20090125/1232876245</a></a></li>
+</ul></li>
+<li>View のテストには、prefoward より、forward で exit させたほうがしっくりくるかも</li>
+</ul>
+<h3>Ethna_Session</h3>
+<ul>
+<li>実装がボロいとの批判が多い
+<ul>
+<li>セッションを保存するディレクトリが固定な件</li>
+<li>セッションが auto start 固定でないほうがよい場合もある</li>
+<li>isValid メソッドのIPチェックがstrictすぎて携帯で使えない件</li>
+<li>session ID の実装が独自で、うまく使えない場合がある件</li>
+<li>DBをセッションに保存する機構を実装すべき</li>
+<li>これは、DBレイヤが抽象化されることが前提</li>
+</ul></li>
+</ul>
+<h3>認証(Auth) の機構はなんとかしたい</h3>
+<ul>
+<li>Ethna_ActionClass を継承する方法は間違いが多い
+<ul>
+<li>継承を忘れればセキュリティ上の致命的なミスとなる。これはどうすれば防げる？</li>
+<li>authenticate インターフェイスを除いて全部ユーザの責任にする？</li>
+</ul></li>
+<li>プラグイン化しようよ
+<ul>
+<li>画一的な処理なのだから、そういう形にしてもいいはず</li>
+<li>プラグイン機構の確定が前提、かつ必須</li>
+</ul></li>
+</ul>
+<h3>URLHandler</h3>
+<ul>
+<li>
+<p>現状はアクション名ありきで path_info をアクション名にマッピングしている</p>
+<ul>
+<li>アクション名ありきで path_info の解釈が後付けなこの実装には確固たる根拠が あるわけではない（いちい）</li>
+<li>mod_rewrite や Net_URL_Mapper を使わざるを得ない</li>
+</ul>
+</li>
+<li>上記のような仕組みではなくて、path_info をもとに、デフォルトでアクション名 を推定する仕組みが欲しい(重要)
+<ul>
+<li>この仕組みを実現するのに、URLHandler の仕組みをごそっと置き換えても構わな いと思う</li>
+</ul></li>
+</ul>
+<h3>サンプルを増やす努力</h3>
+<ul>
+<li>これこそが Ethna だ！ という流儀を示すためにも、サンプルの充実は必須</li>
+<li>当然ドキュメントともリンクしている</li>
+<li><a href="http://planet.php.gr.jp"><a href="http://planet.php.gr.jp">http://planet.php.gr.jp</a></a> は Ethna で出来ているので、これを最新にあわせて書き直そうよ</li>
+</ul>
+<h3>ドキュメント</h3>
+<ul>
+<li>流儀を確立し、再整理は必須
+<ul>
+<li>サンプルコードを増やす努力を。[ethna-users:1093]</li>
+<li><a href="http://ml.ethna.jp/pipermail/users/2009-January/001092.html"><a href="http://ml.ethna.jp/pipermail/users/2009-January/001092.html">http://ml.ethna.jp/pipermail/users/2009-January/001092.html</a></a></li>
+</ul></li>
+<li>簡単なテキスト整形ツールが必要
+<ul>
+<li>DocBook(?) -&gt; 学習コストが高い</li>
+<li>Structured_Text (python)</li>
+<li>halt たんと simpledoc について話をしたのだけれども、あれはJavaコードにヘッダとか直に書いているのでカスタマイズが不能で彼とはうまく折り合えなかったと記憶している</li>
+<li>Ethna でドキュメント管理ツールを再実装する案もあり</li>
+<li>サンプルコードをコメントとかみたいな形で管理できないですかね</li>
+</ul></li>
+</ul>
+<h3>マーケティング</h3>
+<ul>
+<li>要するに「XXといえばEthna」と言わせたい</li>
+<li>目玉機能をつけることでマーケティング力を
+<ul>
+<li>携帯とか</li>
+<li>国産とか</li>
+<li>ローカルなネタを生かせるように</li>
+<li>初心者や中級者の人を増やすには、確固たるドキュメントと流儀の確立が必須</li>
+</ul></li>
+</ul>
+<h3>チケットシステムどうする?</h3>
+<pre><code>以下の点は結局 sourceforge.jp のチケットシステムを使うということで落ち着きました。
+(2009/02/23)</code></pre>
+<ul>
+<li>sf.jp をご破算にしてチケットシステムを使うのもあり</li>
+<li>trac を新たに立てる？</li>
+<li>結論としては、新たに ethna.jp のドメインでバグトラッキングシステムを立てる 方向で
+<ul>
+<li>ethna.jp のドメインなので sf.jp に入れられるものでないとダメ。希望するソフトウェアを各々出して見てください</li>
+<li>kagemai</li>
+<li>redmine</li>
+<li>trac</li>
+<li>mantis</li>
+<li>ethnaで作る?</li>
+</ul></li>
+</ul>
+<h3>新しいコミッタ。新しい流れを</h3>
+<ul>
+<li>１年半近く mumumu がひとりで Ethna をいじってきたのだけど、一人の発想だと必ず進化が止まるので、新たに sotarok と maru_cc というコミッタを迎えた(mumumu)
+<ul>
+<li><a href="http://d.hatena.ne.jp/sotarok"><a href="http://d.hatena.ne.jp/sotarok">http://d.hatena.ne.jp/sotarok</a></a></li>
+<li><a href="http://d.hatena.ne.jp/maru_cc"><a href="http://d.hatena.ne.jp/maru_cc">http://d.hatena.ne.jp/maru_cc</a></a></li>
+</ul></li>
+<li>新しい発想、フィードバックの流れを作れればいいなと思う(mumumu)
+<ul>
+<li>その意味で、新しいコミッタには「新しい血」を期待している</li>
+<li>気負わずに自分ができることを。</li>
+</ul></li>
+<li>業務でやってることをうまくフィードバックする流れを作れたらいいなと思う(maru_cc)</li>
+</ul>
+<h3>番外編</h3>
+<ul>
+<li>Ethnaのメインキャラクター候補
+<ul>
+<li>宮崎あおい</li>
+<li><a href="http://www.aoimiyazaki.jp/"><a href="http://www.aoimiyazaki.jp/">http://www.aoimiyazaki.jp/</a></a></li>
+<li>人妻なんてそんなの関係ねぇ！！！！！</li>
+<li>ポッキーのCMキャラクター(忽那汐里)</li>
+<li><a href="http://pocky.jp/cm/pocky/index.html"><a href="http://pocky.jp/cm/pocky/index.html">http://pocky.jp/cm/pocky/index.html</a></a></li>
+<li>ポニョ(???)</li>
+<li>誰の好みだこれは</li>
+<li>いちいさんをキャラクター担当に任命する</li>
+</ul></li>
+<li>ふじもとさんどうしてる？</li>
+<li>Smarty にDBコードを埋め込む変態コード。
+<ul>
+<li><a href="http://d.hatena.ne.jp/maru_cc/20080625/ethna_template_db"><a href="http://d.hatena.ne.jp/maru_cc/20080625/ethna_template_db">http://d.hatena.ne.jp/maru_cc/20080625/ethna_template_db</a></a></li>
+<li><a href="http://d.hatena.ne.jp/maru_cc/20080325/1206453551"><a href="http://d.hatena.ne.jp/maru_cc/20080325/1206453551">http://d.hatena.ne.jp/maru_cc/20080325/1206453551</a></a> ＜たぶん話してたのはこっち</li>
+</ul></li>
+</ul>

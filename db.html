@@ -1,0 +1,95 @@
+<h1>データベースアクセス</h1>
+<ul>
+<li>一番簡単なやり方(PEAR::DBを使う) </li>
+<li>PEAR::DB 以外のDBアクセスライブラリを使う </li>
+<li>複数のDBオブジェクトを扱う場合 </li>
+<li>リードオンリーのDBを複数台設定したい場合 </li>
+<li>AppManager内でのDBオブジェクトの使用方法 </li>
+</ul>
+<h2>データベースアクセス</h2>
+<p>この部分、Randolph@IRCが、fujimotoさんに頂いたメールを元にして書いてます。</p>
+<h3>一番簡単なやり方(PEAR::DBを使う)</h3>
+<ol>
+<li>
+<p>etc/[appid]-ini.phpにdsn定義を行う。</p>
+<p>$config = array(
+'debug' =&gt; false,
+'dsn' =&gt; 'mysql://user:pass@unix+localhost/dbname',
+);</p>
+</li>
+<li>
+<p>Ethna_Backend::getDBメソッドを利用してDBオブジェクトを取り出す。</p>
+<p>function perform()
+{
+$db =&amp; $this-&gt;backend-&gt;getDB();
+// ...
+return 'index';
+}</p>
+</li>
+</ol>
+<p>Ethnaの デフォルトの DB接続クラス( <a href="doc/Ethna/Ethna_DB_PEAR.html">Ethna_DB_PEAR</a>) はPEAR::DBを継承しているので、</p>
+<pre><code>$sql = "SELECT id FROM test";
+$result =&amp; $db-&gt;query($sql);
+$i = 0;
+while ($data[$i] = $result-&gt;fetchRow()) {
+    $i++;
+}</code></pre>
+<p>こんな感じでQueryを実行して、データ取得。</p>
+<h3>PEAR::DB 以外のDBアクセスライブラリを使う</h3>
+<p>Ethna では、デフォルトの PEAR::DB の他に、 <a href="http://adodb.sourceforge.net/">ADODB</a> 及び <a href="http://creole.phpdb.org/trac/">Creole</a> の クラスが同梱されています。</p>
+<p>それぞれのライブラリをインストールしてあれば、あとはちょっとした変更を加えるだけで、上記の PEAR::DB とほぼ同じように利用することができます。</p>
+<p>ADODB についての詳細は、下記をご覧下さい。</p>
+<p><em>see also:</em> <a href="adodb.html">ADODB を Ethna で使う</a></p>
+<h3>複数のDBオブジェクトを扱う場合</h3>
+<ol>
+<li>
+<p>iniファイルに「dsn_（接続名）」でエントリを追加</p>
+<p>'dsn_r' =&gt; 'mysql://user:pass@unix+localhost/dbname',</p>
+</li>
+<li>
+<p>[appid]_Controller.phpに</p>
+<p>/**</p>
+<ul>
+<li>@var array DBアクセス定義
+*/
+var $db = array(
+'' =&gt; DB_TYPE_RW,
+);</li>
+</ul>
+</li>
+</ol>
+<p>って部分があるので、ここに使いたいDBオブジェクト名を追加。</p>
+<pre><code>/**
+ * @var array DBアクセス定義
+ */
+var $db = array(
+    '' =&gt; DB_TYPE_RW,
+    'r' =&gt; DB_TYPE_RO, // READ ONLY
+);</code></pre>
+<ol>
+<li>
+<p>DBオブジェクト作成時に接続名を指定する。</p>
+<p>// 今までどおりのDB接続
+$db =&amp; $this-&gt;backend-&gt;getDB();
+// SELECT専用のDB接続
+$db_r =&amp; $this-&gt;backend-&gt;getDB('r'); // 引数が「r」になっている。</p>
+</li>
+</ol>
+<h3>リードオンリーのDBを複数台設定したい場合</h3>
+<pre><code>'dsn_r' =&gt; array(
+               'mysql://user:pass@unix+localhost/dbname1',
+               'mysql://user:pass@unix+localhost/dbname2',
+            );</code></pre>
+<p>上記のように、array形式で指定します。</p>
+<pre><code>$db_r =&amp; $this-&gt;backend-&gt;getDB('r'); // 引数が「r」になっている。</code></pre>
+<p>ランダムで、dbname1とdbname2を割り振ってくれます。</p>
+<h3>AppManager内でのDBオブジェクトの使用方法</h3>
+<p>Ethna_AppManagerのコンストラクタにより、既にDBオブジェクトは 取得されていますので、下記の様に操作する事が可能です。</p>
+<pre><code>$this-&gt;db-&gt;query("SELECT id FROM test");
+// 上記「複数のDBオブジェクトを扱う場合」の(1)を行った場合の例
+$this-&gt;db_r-&gt;query("SELECT id FROM test");</code></pre>
+<p>なお、上記方法で取得できるクラスはEthna_DB_PEARクラスです。 prepared statementなど、PEAR_DBの機能をフルに使うには、Ethna_DB_PEARクラスのメンバに直接アクセスする必要があります。</p>
+<pre><code>$sql = "SELECT id FROM test WHERE id = ?";
+$data = array($id);
+$stmt =&amp; $this-&gt;db-&gt;db-&gt;prepare($sql);
+$res =&amp; $this-&gt;db-&gt;db-&gt;execute($stmt, $data);</code></pre>

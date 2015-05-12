@@ -1,0 +1,60 @@
+<h1>エラー処理ポリシー</h1>
+<ul>
+<li>Ethna_Error </li>
+<li>ActionError </li>
+</ul>
+<h2>エラー処理ポリシー</h2>
+<p>アプリケーションの実行中に生じるエラーは、次の２つにわけられます。</p>
+<ul>
+<li>System error
+<ul>
+<li>システムが原因で起きるエラー。DBエラーなど。</li>
+</ul></li>
+<li>User error
+<ul>
+<li>ユーザがフォームに入力した値が不正である場合のエラー。</li>
+</ul></li>
+</ul>
+<p>Ethnaフレームワークでは、これらのエラーは全てEthna_Error（またはPEAR_Error）によって処理されます。</p>
+<p><a href="plugin=attach&amp;refer=ethna-document-dev_guide-error-policy&amp;openfile=Ethna_Error1.png.html" title="Ethna_Error1.png"><img src="http://ethna.jp/index.php?plugin=ref&amp;page=ethna-document-dev_guide-error-policy&amp;src=Ethna_Error1.png" alt="Ethna_Error1.png" title="Ethna_Error1.png" /></a></p>
+<h3>Ethna_Error</h3>
+<p>Ethna_Errorには、エラーコードとエラーメッセージが格納されています。 Ethna_Errorはシステムとしてエラーハンドリングを行うので，実際のアプリケーションでは，Ethna_Errorをアクションクラスで処理し，ユーザに必要な情報のみを提示します．</p>
+<pre><code>function perform()
+    {
+        $sm =&amp; new {アプリケーションID}_SampleManager();
+         $result = $sm-&gt;test();
+        if (Ethna::isError($result)) {
+
+             //エラーの場合の処理
+             .....
+         }
+
+         ....
+     }</code></pre>
+<p>EthnaクラスのisError()メソッドで、エラーの有無を確認できます。 ここではtest()メソッドからエラーオブジェクトが返ってきた場合に，エラー処理を行うようにしています。</p>
+<p>アプリケーションのManagerでエラーオブジェクトを返すには、次のようにします。</p>
+<pre><code>class {アプリケーションID}_SampleManager
+{
+    function test($data)
+    {
+        // 実際には，まともなエラー処理を行う．
+        if (! $data) {
+            return Ethna::raiseNotice('データがありません', E_SAMPLE_TEST);
+        }
+        return 0;
+    }
+}</code></pre>
+<p>エラーオブジェクトには、Notice,Warning,Errorの3つがあります。 エラーの内容に応じて，これらを使い分けます． アプリケーション固有のエラーメッセージを渡したい場合は、EthnaクラスのraiseNotice,raiseWarning,raiseErrorメソッドを使って，Ethna_Errorオブジェクトを生成します． この例では，raiseNoticeを用いてエラーオブジェクトを返しています． 引数には，メッセージとエラーコードを与えます．</p>
+<p><strong><a href="error-definecode.html">アプリケーションエラーコードの定義</a></strong></p>
+<h3>ActionError</h3>
+<p><a href="plugin=attach&amp;refer=ethna-document-dev_guide-error-policy&amp;openfile=Ethna_ActionError.png.html" title="Ethna_ActionError.png"><img src="http://ethna.jp/index.php?plugin=ref&amp;page=ethna-document-dev_guide-error-policy&amp;src=Ethna_ActionError.png" alt="Ethna_ActionError.png" title="Ethna_ActionError.png" /></a></p>
+<p>エラーの内容をユーザに提示した場合，アクションクラスで受け取ったエラーオブジェクトをActionErrorに格納します。 具体的には、下記のようにae(actionError)のaddObjectメソッドを使います。</p>
+<pre><code>if (Ethna::isError($result)) {
+             $this-&gt;ae-&gt;addObject('testError', $result);
+       }</code></pre>
+<p>また、エラーメッセージとエラーコードから、エラーオブジェクトを生成して、ActionErrorに追加するaddメソッドもあります。</p>
+<p>ActionErrorの内容を表示するには，ビューで次のように書きます．</p>
+<pre><code>&lt;tr&gt;
+     &lt;td&gt;エラーメッセージ&lt;/td&gt; 
+     &lt;td&gt;{message name="testError"}&lt;/td&gt;
+  &lt;/tr&gt;</code></pre>

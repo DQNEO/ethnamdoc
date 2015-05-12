@@ -1,0 +1,248 @@
+<h1>Ethna組込みのSmartyプラグイン</h1>
+<ul>
+<li>Ethna組込みのSmartyプラグイン 
+<ul>
+<li>概要 </li>
+<li>modifier </li>
+<li>{...|number_format} </li>
+<li>{...|strftime} </li>
+<li>{...|count} </li>
+<li>{...|join} </li>
+<li>{...|filter} </li>
+<li>{...|explode} </li>
+<li>{...|unique} </li>
+<li>{...|wordwrap_i18n} </li>
+<li>{...|truncate_i18n} </li>
+<li>{...|i18n} </li>
+<li>{...|checkbox}, {...|select}, {...|form_value} </li>
+<li>function </li>
+<li>{message} </li>
+<li>{url} </li>
+<li>{form_name} </li>
+<li>{form_submit} </li>
+<li>{form_input} </li>
+<li>{csrfid} </li>
+<li>{is_error}, {uniqid}, {select}, {checkbox_list} </li>
+<li>block </li>
+<li>{form}...{/form} </li>
+</ul></li>
+</ul>
+<p>書いた人: いちい</p>
+<h3>概要</h3>
+<p>EthnaでSmartyを使う場合に利用できる、組込みの便利なプラグイン(modfier, function, block)についての説明です。</p>
+<p>基本的に Ethna_ViewClass で提供されているヘルパ関数や、 php の組込み関数、 Ethna_Util の関数などを呼び出すラッパーになっています。</p>
+<h3>modifier</h3>
+<h4>{...|number_format}</h4>
+<p>number_format()関数のラッパーです。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>{&quot;12345&quot;|number_format}</p>
+</li>
+<li>
+<p>出力</p>
+<p>12,345</p>
+</li>
+</ul>
+<h4>{...|strftime}</h4>
+<p>strftime()関数のラッパーです。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>{&quot;2004/01/01 01:01:01&quot;|strftime:&quot;%Y年%m月%d日&quot;}</p>
+</li>
+<li>
+<p>出力</p>
+<p>2004年01月01日</p>
+</li>
+</ul>
+<h4>{...|count}</h4>
+<p>(配列にたいする) count() 関数のラッパーです。</p>
+<pre><code>{$array|count}</code></pre>
+<h4>{...|join}</h4>
+<p>配列を連結して文字列にする join() 関数のラッパーです。</p>
+<pre><code>{$str_array|join:","}</code></pre>
+<h4>{...|filter}</h4>
+<p>連想配列のリストから、指定されたキーの値だけを取り出して配列を再構成します。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>$smarty-&gt;assign(&quot;array&quot;, array(
+array(&quot;foo&quot; =&gt; 1, &quot;bar&quot; =&gt; 4),
+array(&quot;foo&quot; =&gt; 2, &quot;bar&quot; =&gt; 5),
+array(&quot;foo&quot; =&gt; 3, &quot;bar&quot; =&gt; 6),
+));</p>
+<p>{$array|filter:&quot;foo&quot;|join:&quot;,&quot;}</p>
+</li>
+<li>
+<p>出力</p>
+<p>1,2,3</p>
+</li>
+</ul>
+<h4>{...|explode}</h4>
+<p>文字列に対する explode() 関数のラッパーです。 第一引数の文字列を第二引数の文字列により分割し、配列にします。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>$smarty-&gt;assign(&quot;1,2,3&quot;, &quot;,&quot;);</p>
+<p>{$array|explode:&quot;,&quot;}</p>
+</li>
+<li>
+<p>出力</p>
+<p>array(1, 2, 3)</p>
+</li>
+</ul>
+<h4>{...|unique}</h4>
+<p>配列に対する unique() 関数のラッパーです。第2引数にキーをあたえることで、 filter を同時に行うことができます。</p>
+<pre><code>{$array|unique:"foo"}</code></pre>
+<h4>{...|wordwrap_i18n}</h4>
+<p><strong>utf-8のみ対応</strong> 指定された文字数で文字列をワードラップします。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>----12345678----
+{&quot;あいうaえaおaかきaaaくけこ&quot;|wordrap_i18n:8:&quot;\n&quot;:4}</p>
+</li>
+<li>
+<p>出力</p>
+<p>----12345678----
+あいうa
+えaおaか
+きaaaく
+けこ</p>
+</li>
+<li>引数
+<ul>
+<li>ワードラップする文字数 (必須)</li>
+<li>改行文字</li>
+<li>半角スペースでのインデント数</li>
+</ul></li>
+</ul>
+<h4>{...|truncate_i18n}</h4>
+<p>文字列を指定された文字数で切り詰めます。 mb_strimwidth() を用いています。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>{&quot;日本語です&quot;|truncate_i18n:5:&quot;...&quot;}</p>
+</li>
+<li>
+<p>出力</p>
+<p>日本...</p>
+</li>
+<li>引数
+<ul>
+<li>切り詰める文字数</li>
+<li>切り詰めた後に付加する文字列</li>
+</ul></li>
+</ul>
+<h4>{...|i18n}</h4>
+<p>i18nメッセージを取得します。 Ethna_I18N クラスを利用します。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>{&quot;english&quot;|i18n}</p>
+</li>
+<li>
+<p>出力(例)</p>
+<p>英語</p>
+</li>
+</ul>
+<h4>{...|checkbox}, {...|select}, {...|form_value}</h4>
+<p>詳しくはAPIドキュメントをご覧ください。多くの場合、もっと簡単な代替手段があります。</p>
+<h3>function</h3>
+<h4>{message}</h4>
+<p>指定されたフォームにエラーがある場合にメッセージを出力します。エラーがないときはなにも出力されません。</p>
+<ul>
+<li>
+<p>入力</p>
+<p><input type="text" name="foo">{message name=&quot;foo&quot;}</p>
+</li>
+<li>
+<p>出力</p>
+<p><input type="text" name="foo">fooを入力してください</p>
+</li>
+<li>引数
+<ul>
+<li>アクションフォームで定義したフォーム名を指定します。</li>
+</ul></li>
+</ul>
+<h4>{url}</h4>
+<p>Ethna_UrlHandler を使って、アクション名とパラメータからURLを生成します。UrlHandlerについての説明については <a href="urlhandler.html">Ethna_UrlHandler</a>を参照してください。</p>
+<p>以下では、アプリの設定ファイル (app-ini.php) で 'url' =&gt; ' <a href="http://example.jp/index.php'"><a href="http://example.jp/index.php">http://example.jp/index.php</a>'</a> が設定され、 /show/article/3/2 で show_article アクションにパラメータ chapter=3, sectio=2 を与えるものとします。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>{url action=&quot;show_article&quot; chapter=&quot;3&quot; section=&quot;1&quot; style=&quot;plain&quot; scheme=&quot;https&quot; anchor=&quot;subsection2&quot;}</p>
+</li>
+<li>
+<p>出力</p>
+<p><a href="https://example.jp/index.php/show/article/3/2?style=plain#subsection2">https://example.jp/index.php/show/article/3/2?style=plain#subsection2</a></p>
+</li>
+<li>引数
+<ul>
+<li>action: UrlHandlerに渡すアクション名を指定します。(必須)</li>
+<li>scheme: 'url' に http:// などの scheme が指定されていた場合に、それを置き換えることができます。</li>
+<li>anchor: '#anchor' 形式のアンカーを付加します。</li>
+<li>上にあげた以外のパラメータ: GETパラメータとしてURLに付加されます。</li>
+</ul></li>
+</ul>
+<h4>{form_name}</h4>
+<p>アクションフォームで定義された、フォームの表示名を取得します。Ethna_ViewClassのgetFormName()を用いています。</p>
+<pre><code>var $form = array(
+    'text' =&gt; array(
+        'type' =&gt; VAR_TYPE_TEXT,
+        'name' =&gt; 'テキスト',
+        ...</code></pre>
+<ul>
+<li>
+<p>入力</p>
+<p>{form_name name=&quot;text&quot; action=&quot;foo&quot;}</p>
+</li>
+<li>
+<p>出力</p>
+<p>テキスト</p>
+</li>
+<li>引数
+<ul>
+<li>name: フォーム名(連想配列$formのキー)を指定します。(必須)</li>
+<li>action: フォーム定義を取得するアクションを指定します。省略時の動作については <a href="view-form_helper.html">フォームヘルパ</a>を参照してください。</li>
+</ul></li>
+</ul>
+<h4>{form_submit}</h4>
+<p>フォームのsubmitボタンを生成します。Ethna_ViewClassのgetFormSubmit()を用いています。詳しくは <a href="view.html">Ethna_ViewClass</a>を参照してください。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>{form_submit value=&quot;送信&quot;}</p>
+</li>
+<li>
+<p>出力</p>
+<p>[送信] (実際はブラウザのボタン)</p>
+</li>
+<li>引数
+<ul>
+<li>すべて getFormSubmit() にそのまま渡されます。</li>
+</ul></li>
+</ul>
+<h4>{form_input}</h4>
+<p>Ethna_ViewClassのgetFormInput() (および <em>getFormInput</em>*()) を使い、アクションフォームのフォーム定義から、自動的にそのフォームを送信するためのHTMLタグを生成します。</p>
+<p>詳細は <a href="view-form_helper.html">フォームヘルパ</a>を参照してください。</p>
+<h4>{csrfid}</h4>
+<p>CSRF対策のためのIDをhiddenタグもしくはGETのリクエストパラメータとして出力します。</p>
+<ul>
+<li>
+<p>入力</p>
+<p>{csrfid}
+&lt;a href=&quot;index.php?action_do_something=true&amp;{csrfid type=&quot;get&quot;}&gt;</p>
+</li>
+<li>
+<p>出力</p>
+<input type="hidden" name="csrfid" value="a0f24f75e...e48864d3e">
+<p><a href="index.php?action_do_something=true&csrfid=a0f24f75e...e48864d3e"></p>
+</li>
+</ul>
+<h4>{is_error}, {uniqid}, {select}, {checkbox_list}</h4>
+<p>詳しくはAPIドキュメントをご覧ください。多くの場合、もっと簡単な代替手段があります。</p>
+<h3>block</h3>
+<h4>{form}...{/form}</h4>
+<p>詳細は <a href="view-form_helper.html">フォームヘルパ</a>を参照してください。</p>

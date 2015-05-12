@@ -1,0 +1,244 @@
+<h1>多次元配列へのアクセス</h1>
+<p>配列をグループ化するために、多次元配列を使うこともできます。グループ化することで、 フォーム項目の名前が重複したり、ひとつのフォーム内に複数のテーブルへの項目が存在 していた場合に有利になる局面があります。</p>
+<p>多次元でフォーム定義を行うことで、通常のアクションフォームの使い方と同様のやり方で、グループ化して値を取得することができるようになります。</p>
+<pre><code>この機能を使うためには、Ethna 2.5.0 以降が必要です</code></pre>
+<ul>
+<li>多次元配列へのアクセス 
+<ul>
+<li>基本的なやり方 </li>
+<li>配列型を指定した場合 </li>
+<li>ファイルを指定した場合 </li>
+<li>テンプレート上での値の参照の仕方はどうなるの？ </li>
+<li>フォーム値の自動検証やフォームヘルパはどうなるの？ </li>
+<li>多次元配列を指定する場合の制限事項 </li>
+<li>指定できる配列の階層の深さはデフォルト10階層まで </li>
+<li>矛盾したフォーム指定をした場合 </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | mumumu | 2009-01-22 | 新規作成 |</p>
+<h3>基本的なやり方</h3>
+<p>フォーム定義を以下のように [] 付きのキーで分類して定義するだけです。例を以下に示します。</p>
+<p>[phone][home]や、[phone][mobile] のように、複数の階層を使って定義することも可能です。</p>
+<pre><code>var $form = array(
+       'User[name]' =&gt; array(
+           'name' =&gt; '名前',
+           'type' =&gt; VAR_TYPE_STRING,
+           'form_type' =&gt; FORM_TYPE_TEXT,
+       ),
+       'User[phone][home]' =&gt; array(
+           'name' =&gt; '自宅電話番号',
+           'type' =&gt; VAR_TYPE_STRING,
+           'form_type' =&gt; FORM_TYPE_TEXT,
+       ),
+       'User[phone][mobile]' =&gt; array(
+           'name' =&gt; '携帯電話番号',
+           'type' =&gt; VAR_TYPE_STRING,
+           'form_type' =&gt; FORM_TYPE_TEXT,
+       ),</code></pre>
+<p>テンプレートに関しても特別な点はなく、通常のPHPでのフォーム多次元配列と同様です。</p>
+<pre><code>&lt;form method="post"&gt;
+  &lt;input type="text" name="User[name]" value="宮崎あおい" /&gt;
+  &lt;input type="text" name="User[phone][home]" value="01-2345-6789" /&gt;
+  &lt;input type="text" name="User[phone][mobile]" value="090-1234-5678" /&gt;
+  &lt;input type="submit"&gt;
+&lt;/form&gt;</code></pre>
+<p>続いて、通常のフォームの配列と同様に、アクションクラスの prepare()あるいはperform()メソッドでアクションフォームを通じてフォーム値にアクセスするだけです。例えば以下のように</p>
+<pre><code>perform()
+{
+    var_dump($this-&gt;af-&gt;get('User'));
+}</code></pre>
+<p>とすると</p>
+<pre><code>array(2) {
+  ["name"]=&gt;
+  string(15) "宮崎あおい"
+  ["phone"]=&gt; array(2) {
+    ["home"]=&gt;
+    string(12) "01-2345-6789"
+    ["mobile"]=&gt;
+    string(13) "090-1234-5678"
+  }
+}</code></pre>
+<p>のように指定した階層以下の配列を全て取得することが出来ます。また、User[name] User[phone] のような、途中の階層を指定して以下のようにフォーム値を取得することもできます。</p>
+<pre><code>perform()
+{
+    // string(15) "宮崎あおい" を取得
+    var_dump($this-&gt;af-&gt;get('User[name]'));
+
+    // 階層の途中の場合も、以下のように途中から
+    // 配列を取得可能
+    //
+    // array(2) {
+    // ["home"]=&gt;
+    // string(12) "01-2345-6789"
+    // ["mobile"]=&gt;
+    // string(13) "090-1234-5678"
+    // }
+    var_dump($this-&gt;af-&gt;get('User[phone]'));
+}</code></pre>
+<p>当然、以下のように最下層の値も取得可能です</p>
+<pre><code>perform()
+{
+    // 最下層の配列を指定した場合 
+    // string(15) "01-2345-6789" を取得
+    var_dump($this-&gt;af-&gt;get('User[phone][home]'));
+
+    // string(13) "090-1234-5678"
+    var_dump($this-&gt;af-&gt;get('User[phone][mobile]'));
+}</code></pre>
+<p>なお、フォーム値に何も入力されない、あるいはフォーム値自体が送信されなかった場合は 配列の場合と同様に値は null となりますが、それぞれの項目自体は残ることに注意してください。たとえば、上記の例ですべての項目を入力せずに Submitした場合は、以下のようになります。</p>
+<pre><code>array(2) {
+  ["name"]=&gt;
+  NULL
+  ["phone"]=&gt; array(2) {
+    ["home"]=&gt;
+    NULL
+    ["mobile"]=&gt;
+    NULL
+  }
+}</code></pre>
+<h3>配列型を指定した場合</h3>
+<p><a href="form-type.html">ファイルや配列にアクセスする</a> のページも参照してください。</p>
+<p>上記のページが理解できていれば、配列の階層が増えるだけで、あとは通常のEthnaと変わりありません。</p>
+<p>たとえば、以下のようなフォームを定義したとします。typeにarray(VAR_TYPE_STRING)を指定しています。</p>
+<pre><code>var $form = array(
+       'Artist[name]' =&gt; array(
+           'name' =&gt; '好きなキャラクター',
+           'type' =&gt; array(VAR_TYPE_STRING),
+           'form_type' =&gt; FORM_TYPE_TEXT,
+       ),
+   );</code></pre>
+<p>テンプレートは以下のように書いたとします。</p>
+<pre><code>&lt;form method="post"&gt;
+  &lt;input type="text" name="Artist[name][]" value="ほげ" /&gt;
+  &lt;input type="text" name="Artist[name][]" value="ふが" /&gt;
+  &lt;input type="text" name="Artist[name][]" value="むう" /&gt;
+  &lt;input type="submit"&gt;
+&lt;/form&gt;</code></pre>
+<p>この場合、以下の方法でフォームに入力された情報を取得出来ます。</p>
+<pre><code>//
+ // array(1) {
+ // ["name"]=&gt;
+ // array(3) {
+ // [0]=&gt;
+ // string(6) "ほげ"
+ // [1]=&gt;
+ // string(6) "ふが"
+ // [2]=&gt;
+ // string(6) "むう"
+ // }
+ // }
+ $var1 = $this-&gt;af-&gt;get('Artist');
+
+ // array(3) {
+ // [0]=&gt;
+ // string(6) "ほげ"
+ // [1]=&gt;
+ // string(6) "ふが"
+ // [2]=&gt;
+ // string(6) "むう"
+ // }
+ $var2 = $this-&gt;af-&gt;get('Artist[name]');
+
+ // string(6) "ふが"
+ $var3 = $this-&gt;af-&gt;get('Artist[name][0]'); // 一つ目のフォームの値
+
+ // string(6) "むう"
+ $var4 = $this-&gt;af-&gt;get('Artist[name][1]'); // 二つ目のフォームの値</code></pre>
+<h3>ファイルを指定した場合</h3>
+<p><a href="form-type.html">ファイルや配列にアクセスする</a> のページも参照してください。</p>
+<p>上記のページが理解できていれば、他の型を使用した場合と特に変化ありません。つまり、階層構造を指定すれば、それに従った階層構造で値が取得できるようになります。</p>
+<p>例えば、以下のような定義をしたとします。</p>
+<pre><code>var $form = array(
+       'File[foo]' =&gt; array(
+           'name' =&gt; 'ファイルfoo',
+           'type' =&gt; VAR_TYPE_FILE,
+           'form_type' =&gt; FORM_TYPE_FILE,
+       ),
+       'File[bar]' =&gt; array(
+           'name' =&gt; 'ファイルbar',
+           'type' =&gt; VAR_TYPE_FILE,
+           'form_type' =&gt; FORM_TYPE_FILE,
+       ),
+   );</code></pre>
+<p>テンプレートは以下のように書いたとします。</p>
+<pre><code>&lt;form method="post" enctype="multipart/form-data"&gt;
+  &lt;input type="file" name="File[foo]" /&gt;
+  &lt;input type="file" name="File[bar]" /&gt;
+  &lt;input type="submit"&gt;
+&lt;/form&gt;</code></pre>
+<p>そして、下記の取得でフォームの値を出力したとします。</p>
+<pre><code>$var = $this-&gt;af-&gt;get('File');
+   print_r($var);</code></pre>
+<p>この場合の出力は以下となります。</p>
+<pre><code>array (
+  'foo' =&gt; 
+  array (
+    'name' =&gt; 'favicon.ico',
+    'type' =&gt; 'image/x-icon',
+    'size' =&gt; 318,
+    'tmp_name' =&gt; '/tmp/phps2O45r',
+    'error' =&gt; 0,
+  ),
+  'bar' =&gt; 
+  array (
+    'name' =&gt; 'authorized_keys.txt',
+    'type' =&gt; 'text/plain',
+    'size' =&gt; 611,
+    'tmp_name' =&gt; '/tmp/phpn3njWB',
+    'error' =&gt; 0,
+  ),
+)</code></pre>
+<h3>テンプレート上での値の参照の仕方はどうなるの？</h3>
+<p>これまで見てきた通り、アクションで多次元配列として定義したフォーム値は、連想配列としてSubmitされてきます。</p>
+<pre><code>var $form = array(
+       'Artist[name]' =&gt; array(
+           'name' =&gt; '好きなキャラクター',
+           'type' =&gt; array(VAR_TYPE_STRING),
+           'form_type' =&gt; FORM_TYPE_TEXT,
+       ),
+   );</code></pre>
+<p>よって、上記のような多次元配列のフォーム定義があるとすると、$Artist[name] の値は</p>
+<pre><code>$form.Artist.name</code></pre>
+<p>としてテンプレート上で参照できます。$form.Artist[name] ではないので注意して下さい。これは Smarty での連想配列の参照の仕方と同じです。</p>
+<h3>フォーム値の自動検証やフォームヘルパはどうなるの？</h3>
+<p>多次元配列の機能はフォーム値の自動検証、及びフォームヘルパに影響しません。</p>
+<p>グループ化してフォームを定義した場合でも、 <a href="form-multiarray.html#ce69c0d9">矛盾したフォーム定義をしない限り</a>自動検証の機能がそれぞれの項目について有効になります。</p>
+<p>フォームヘルパの場合でも、以下のように普通に定義できます。</p>
+<pre><code>{form_input name="User[phone][name]"}</code></pre>
+<p>フォーム値の自動検証については、 <a href="form.html">フォーム定義のページ</a>を参照してください。<br />
+フォームヘルパについては、 <a href="form-multiarray.html">フォームヘルパ</a> を参照してください。</p>
+<h3>多次元配列を指定する場合の制限事項</h3>
+<p>多次元配列を指定できるということは、重複したキーや、深すぎる階層など、PHPの実装上都合の悪い指定もまた、指定できてしまうということを意味しています。ここでは、Ethna の多次元配列の実装上「できないこと」を説明します。</p>
+<h4>指定できる配列の階層の深さはデフォルト10階層まで</h4>
+<p>Ethna では、以下のような深い階層も指定できます。但し、その階層の深さはデフォルト10階層までです。</p>
+<p>Ethna では、多次元配列の処理に再帰処理を使用しています。よって、PHPの仕様により、処理できる階層は100までに制限されますが、Ethnaの内部ではこれより深い階層の値を指定しても「NULL」しか取得できません。</p>
+<pre><code>// 10階層(1番上の "a" も含む)
+'a[b][c][d][e][f][g][h][i][j]' =&gt; array(
+    'name' =&gt; '10階層の多次元配列',
+    'type' =&gt; VAR_TYPE_STRING,
+    'form_type' =&gt; FORM_TYPE_TEXT,
+),
+
+// 11階層(1番上の "a" も含む)
+// この値は、最下層の値を取得しようとしてもNULLとなる
+'a[b][c][d][e][f][g][h][i][j][k]' =&gt; array(
+    'name' =&gt; '11階層の多次元配列',
+    'type' =&gt; VAR_TYPE_STRING,
+    'form_type' =&gt; FORM_TYPE_TEXT,
+),</code></pre>
+<h4>矛盾したフォーム指定をした場合</h4>
+<p>同じ項目名で、多次元配列とそうでない項目を指定したり等の矛盾した定義はできません。</p>
+<p>片方で多次元配列でない普通のスカラーを指定し、他方で同じ名前の多次元配列のフォーム定義を複数行った場合、正確に全ての値が取得できません。（正確には、いずれかの値が取得できることもあるし、全て取得できないこともあります） 他の矛盾したフォーム定義の場合も同様です。</p>
+<p>たとえば以下の場合、多次元配列である&quot;sample[str]&quot;に対して、フォーム配列の&quot;sample&quot;で指定した値の検証が有効になりますし、値が正確に取得できないため、いずれの値の検証機能もうまく動かないことがあります。</p>
+<pre><code>'sample' =&gt; array(
+     'name' =&gt; '数値のみ指定可能な配列。取得できる値はスカラー',
+     'required' =&gt; true,
+     'type' =&gt; array(VAR_TYPE_INT),
+     'form_type' =&gt; FORM_TYPE_TEXT,
+ ),
+ 'sample[str]' =&gt; array(
+     'name' =&gt; '文字列が指定可能な多次元フォーム',
+     'required' =&gt; true,
+     'type' =&gt; VAR_TYPE_STRING,
+     'form_type' =&gt; FORM_TYPE_TEXT,
+ ),</code></pre>

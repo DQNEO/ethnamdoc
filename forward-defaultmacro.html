@@ -1,0 +1,20 @@
+<h1>遷移時のデフォルトマクロを指定する。</h1>
+<ul>
+<li>更新履歴
+<ul>
+<li>rendererに対応させた内容に変更 (2006/11/20, いちい)</li>
+</ul></li>
+</ul>
+<h2>遷移時のデフォルトマクロを指定する。</h2>
+<p>アプリケーションにあるビューの基底クラス(app/{APPID}_ViewClass.php)の_setDefaultメソッドを利用することで、 Smartyにあらかじめ値をassignするなどの共通処理をすることができます。</p>
+<p>なお、コントローラの _setDefaultTemplateEngine() を利用した方法は現在は推奨されません。</p>
+<p>以下は、etc/{APPID}-ini.phpに設定した、base_urlとsite_nameをアサインする処理です。</p>
+<pre><code>function _setDefault(&amp;$renderer)
+   {
+       $smarty =&amp; $renderer-&gt;getEngine();
+
+       $smarty-&gt;assign('BASE_URL', $this-&gt;config-&gt;get('base_url') );
+       $smarty-&gt;assign('site_name', $this-&gt;config-&gt;get('site_name') );
+
+   }</code></pre>
+<p>これを記述することで、すべてのアクションやビューでsite_nameやbase_urlを assignするというような手間をはぶくことができます。</p>

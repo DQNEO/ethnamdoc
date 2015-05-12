@@ -1,0 +1,96 @@
+<h1>開発FAQ</h1>
+<ul>
+<li>Q. Ethna は何故 Ethna_ViewClass っていう層を設けているの？ Cakeとかのフレームワークにはこんなのないよ！ </li>
+<li>Q.テンプレートエンジンはSmartyしか使えないの? </li>
+<li>Q.?action_login=trueでアクションを選ぶのが嫌 </li>
+<li>Q.デバッグはどうするの？ </li>
+<li>Q.複数のフォーム値をまたぐチェックはどうやってやるの？ </li>
+<li>Q.locationさせるメソッドはないの？ </li>
+<li>Q. DocumentRoot配下にEthnaとEthnaアプリケーションを置きたいけど・・・ </li>
+<li>Q.　ビュークラスは省略できるの？ </li>
+<li>Q.　アクションクラスは省略できるの？ </li>
+<li>Q.　アクションフォームクラスは省略できるの？ 
+<ul>
+<li>Comment </li>
+</ul></li>
+</ul>
+<h3>Q. Ethna は何故 Ethna_ViewClass っていう層を設けているの？ Cakeとかのフレームワークにはこんなのないよ！</h3>
+<p>Ethna は View（テンプレート）に書かれるコンテキストに依存した(if分岐等の)処理や、定型的(JSON, リダイレクト、定型ヘッダ等) な出力処理を View に書くのが流儀です。</p>
+<h3>Q.テンプレートエンジンはSmartyしか使えないの?</h3>
+<p>現状は、デフォルトの状態ではSmartyしか使えません。 Ethna_Rendererを継承したクラスを作成すればSmarty以外でも可能です。</p>
+<p>PHPを使った例 <a href="http://eringi.com/weblog/archives/2007/02/ethna_renderer.html"><a href="http://eringi.com/weblog/archives/2007/02/ethna_renderer.html">http://eringi.com/weblog/archives/2007/02/ethna_renderer.html</a></a></p>
+<p><strong><a href="renderer.html">Ethna_Rendererの使い方</a></strong></p>
+<h3>Q.?action_login=trueでアクションを選ぶのが嫌</h3>
+<p>アクションを呼び出す方法は自由にカスタマイズできます。</p>
+<p><strong><a href="action-formname.html">アクション名の決定方法を変更する</a></strong></p>
+<h3>Q.デバッグはどうするの？</h3>
+<p>ethnaが作ったプロジェクトの中のetcディレクトリに設定項目ファイルがあります。(ProjectName-ini.phpみたいな)</p>
+<p>デフォルトであれば、$configという配列を指定することになってるので、</p>
+<pre><code>$config = array(
+    // *****
+    'debug' =&gt; true,
+    'log_facility' =&gt; 'file',
+    'log_level' =&gt; 'debug',
+    // *****
+);</code></pre>
+<p>としてやれば、logディレクトリに発行したSQLや実行したActionなどの詳細なログが溜まります。 ログレベルは</p>
+<ul>
+<li>debug</li>
+<li>info</li>
+<li>notice</li>
+<li>warning</li>
+<li>err</li>
+<li>crit</li>
+<li>alert</li>
+<li>emerg</li>
+</ul>
+<p>があります。</p>
+<p>ログ関連の情報については下記が参考になります。</p>
+<p><strong><a href="log.html">ログ</a></strong></p>
+<h3>Q.複数のフォーム値をまたぐチェックはどうやってやるの？</h3>
+<p>例：ラジオボタンAをチェックすると、テキストボックスBの入力が必須になる場合など</p>
+<p>74 ：72：2005/12/17(土) 02:51:25 ID:???</p>
+<pre><code>たとえば、「Aのフォームでhogeを選択した場合にBが必須になる」くらいだったら
+   簡単だよね。
+   validateメソッドでチェックする前に、ActionFormの定義値を変えてやればいい。
+   HOGE_ActionClass::prepareの中で
+   if ($this-&gt;af-&gt;get('a') == 'hoge') {
+       $this-&gt;af-&gt;form['b']['required'] = true;
+   } 
+   if ($this-&gt;validate() &gt; 0) {
+       return 'post';
+   } 
+   とかかな。これがEthnaの流儀かどうかはしらんが、ActionFormを使うならこうするかな。</code></pre>
+<p>validate前に動的にフォーム定義の内容を変更する技がある。*1</p>
+<h3>Q.locationさせるメソッドはないの？</h3>
+<p>今のところ、locationをさせるメソッドはありません。</p>
+<p>Symfony HttpFoundation のRedirectResponseを使えるようにする予定です。</p>
+<h3>Q. DocumentRoot配下にEthnaとEthnaアプリケーションを置きたいけど・・・</h3>
+<p>一部の(lolipopとか)サーバではDocumentRoot配下にしかファイルを置けません。その場合、project-IDが分かってしまうと、logやテンプレートソースが見えてしまいます。 .htaccessが使える場合は、</p>
+<pre><code>deny from all</code></pre>
+<p>と書いてEthnaとEthnaアプリケーションの一番上においておくと良いと思います。</p>
+<h3>Q.　ビュークラスは省略できるの？</h3>
+<p>できます。 ビュークラスの処理内容が空の場合は、ファイルそのものを作らないことができます。</p>
+<p>ビュークラスファイルを作らなかった場合は、{App}_ViewClassが代わりに呼ばれます。</p>
+<h3>Q.　アクションクラスは省略できるの？</h3>
+<p>FooアクションクラスなしでFooビュー(orテンプレート)を作ることはできます。
+その場合は、他のアクションからFooビューを呼び出せばOKです。</p>
+<h3>Q.　アクションフォームクラスは省略できるの？</h3>
+<p>できます。</p>
+<p>フォーム値を何も受け取らない画面では、フォームクラス作成しなくてもＯＫです。(その場合は{App}_ActionFormが代わりに呼ばれます)</p>
+<h2>Comment</h2>
+<ul>
+<li>Locationとか、Viewからのアクションの指定はEthna_Utilやsmarty_functionでできるといいですね。 -- halt <a href="cmd=edit&amp;page=halt&amp;refer=faq-dev_guide_faq.html">?</a> 2005-12-20 (火) 14:43:23</li>
+<li><a href="http://comimi.net/ethna/Aero_Util.phps"><a href="http://comimi.net/ethna/Aero_Util.phps">http://comimi.net/ethna/Aero_Util.phps</a></a>　こんな感じでどーでしょ。本体につっこむなら、もっとイケテルな方法ありそうですが。 -- 個々一番 <a href="cmd=edit&amp;page=%B8%C4%A1%B9%B0%EC%C8%D6&amp;refer=faq-dev_guide_faq.html">?</a> 2005-12-20 (火) 21:26:17</li>
+<li>さくら(SAKURA)のレンタルサーバも DocumentRoot 配下でないとファイルを置けません。シンボリックリンクは使用できず 500 エラーになります。これに気づかず時間を無駄にしました。 -- p2 <a href="cmd=edit&amp;page=p2&amp;refer=faq-dev_guide_faq.html">?</a> 2007-04-12 (木) 00:05:54</li>
+<li>
+<p><a href="ethna-document-dev_guide-db.html">db.html</a> のページがクラックされたのか書き換わってます。本ページ管理者さんへメールなどしようと思いましたが連絡先が見当たらない為、このComment欄にて失礼します。後でこのコメントを削除していただければと思います。 -- ume <a href="cmd=edit&amp;page=ume&amp;refer=faq-dev_guide_faq.html">?</a> 2007-11-14 (水) 15:25:58</p>
+</li>
+<li>
+<ul>
+<li><em>
+*1ふじもとさん自身も <a href="http://ml.ethna.jp/pipermail/users/2005-March/000012.html">[Ethna-users:00012] </a>で似たような事をおっしゃってますね。*2<br />
+\</em>2というか、そっちが先:-)   </li>
+</ul>
+</li>
+</ul>

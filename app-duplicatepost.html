@@ -1,0 +1,40 @@
+<h1>二重POSTを防止する</h1>
+<ul>
+<li>(1) 登録画面の前のページ(確認画面等)にユニークIDを仕込む </li>
+<li>(2) 登録処理の Action で二重POSTをチェックする </li>
+<li>(捕捉) 動作原理 </li>
+</ul>
+<h2>二重POSTを防止する</h2>
+<h3>(1) 登録画面の前のページ(確認画面等)にユニークIDを仕込む</h3>
+<p>ethnaには二重POSTのチェック用のユニークIDを出力するSmartyプラグイン {uniqid} が用意されています。 以下のように確認画面(ない場合は登録画面) のテンプレートにユニークIDを仕込みます。</p>
+<p>POSTの場合(hidden)</p>
+<pre><code>&lt;form method=POST action=index.php&gt;
+&lt;input type="hidden" name="action_user_regist_do" value="1"&gt;
+ {uniqid}
+ :
+ :
+&lt;/form&gt;</code></pre>
+<p>{uniqid} の部分には以下のようなhiddenタグが出力されます。</p>
+<pre><code>&lt;input type="hidden" name="uniqid" value="a0f24f75e...e48864d3e"&gt;</code></pre>
+<p>GET の場合</p>
+<pre><code>&lt;a href="?action_user_regist_do=1&amp;...&amp;{uniqid type=get}"&gt;登録&lt;/a&gt;</code></pre>
+<h3>(2) 登録処理の Action で二重POSTをチェックする</h3>
+<p>Ethna_Util::isDuplicatePost() の返り値が true の場合二重POSTです。 それ以降の処理をスキップして return します。</p>
+<pre><code>function perform()
+    {
+           if (Ethna_Util::isDuplicatePost()) {
+              // 二重POSTの場合
+              return 'regist_done';
+           }
+
+           // 登録処理
+                :
+                :
+           return 'regist_done';
+    }</code></pre>
+<h3>(捕捉) 動作原理</h3>
+<p>Ethna_Util::isDuplicatePost() が呼ばれると、project<em>root/tmp/ から<br />
+uniqid</em>{REMOTE<em>ADDR}</em>{uniqid} というファイルを探します。<br />
+そのファイルが既に存在する場合は二重POSTとみなし true を返し、ない場合は作成します。<br />
+リクエストに uniqid というパラメータがない場合は 常に falseを返します。<br />
+一時ファイルは1時間で削除されます。</p>

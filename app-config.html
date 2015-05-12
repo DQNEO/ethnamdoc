@@ -1,0 +1,145 @@
+<h1>Ethnaアプリケーションの設定ファイル</h1>
+<p>Ethna では、PHPファイルやテンプレートファイルを ethnaコマンドで生成し、生成したものを主に弄っていきます。しかし、アプリケーション全体に共通する設定というのも存在しており、それらは別に記述する必要があります。ここでは、そうしたアプリケーション全体の設定について説明します。</p>
+<ul>
+<li>Ethnaアプリケーションの設定ファイル 
+<ul>
+<li>設定ファイルの置き場所 </li>
+<li>設定値を制御する </li>
+<li>設定値を記述する </li>
+<li>設定値を取得する </li>
+<li>個別の設定値の詳細 </li>
+<li>デバッグ設定 </li>
+<li>データベース接続設定 </li>
+<li>ログ出力の設定 </li>
+<li>memcached </li>
+<li>国際化設定 </li>
+<li>CSRF対策 </li>
+<li>設定値をiniファイルで管理する </li>
+<li>設定値をyamlで管理する </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | ---- | ---------- | 新規作成 |
+| 書いた人 | mumumu | 2009-06-15 | 最新版に追随する形で全面的に修正 |</p>
+<h3>設定ファイルの置き場所</h3>
+<p>以下のようにアプリケーションIDを「sample」としてプロジェクトを作成すると、sample/etc/sample-ini,php に設定ファイルが作成されます。</p>
+<pre><code>$ ethna add-project sample 
+$ cd sample/etc
+$ ls
+sample-ini.php</code></pre>
+<p>つまり、etc/[アプリケーションID]-ini.php が設定ファイルの置き場所ということになります。</p>
+<h3>設定値を制御する</h3>
+<h4>設定値を記述する</h4>
+<p>Ethnaの設定ファイルは素のPHPを使って記述します。上で説明した etc/[アプリケーションID]-ini.php に、$config というグローバル変数を書き、そこに配列の形で定義を行います。</p>
+<pre><code>$config = array(
+    'debug' =&gt; false,
+    'dsn' =&gt; 'mysql://user:pass@unix+localhost/dbname',
+);</code></pre>
+<p>ここに設定した値は、変更すると次のリクエストからすぐに反映されます。この変数に一ヶ所に纏めることで、環境が変わった場合の対応も容易になります。</p>
+<h4>設定値を取得する</h4>
+<p>Ethnaには設定値の制御を行うクラスとして Ethna_Config があります。このクラスを利用すれば、上記で設定したファイルの設定値が容易に取得できます。</p>
+<p>ユーザーが主に触ることになるアクションクラスやビュークラス、アプリケーションマネージャークラスには、$config というメンバで Ethna_Config クラスのインスタンスが定義されています。よって、getメソッドを使って設定値を取得することができます。</p>
+<p>以下はアクションクラスで設定値を取得する例です。 <a href="doc/Ethna/Ethna_Config.html">Ethna_ConfigクラスのAPIドキュメント</a>も参照してください。</p>
+<pre><code>class Sample_Action_Index extends Ethna_ActionClass
+{
+    function prepare()
+    {
+        return null;
+    }
+
+    function perform()
+    {
+        // dsn という設定値を取得
+        $dsn = $this-&gt;config-&gt;get('dsn');
+
+        //.... 残りの処理
+    }
+}</code></pre>
+<h3>個別の設定値の詳細</h3>
+<p>ここでは、Ethna で設定できる設定値のすべてを詳細に示します。</p>
+<h4>デバッグ設定</h4>
+<pre><code>$config = array(
+    'debug' =&gt; false, // デフォルトはfalse
+);</code></pre>
+<p>デバッグ設定は開発時に使用するもので、true または false で指定します。 この値をtrueにした場合、以下の機能が実行できるようになります。</p>
+<ol>
+<li>www/info.php によるアプリケーション情報の一覧</li>
+<li>www/unittest.php による単体テスト実行</li>
+</ol>
+<p><a href="ethna-document-dev_guide-misc-unittest.html">ユニットテストを実行する</a> も参照してください。</p>
+<p><strong>本番環境でこの値を絶対trueに設定しないで下さい！ 上記の機能はユーザーに見せるものではないからです！</strong></p>
+<h4>データベース接続設定</h4>
+<pre><code>$config = array(
+   // sample-1: single db
+   'dsn' =&gt; 'mysql://user:password@server/database',
+   // sample-2: single db w/ multiple users
+   'dsn' =&gt; 'mysql://rw_user:password@server/database', // read-write
+   'dsn_r1' =&gt; 'mysql://ro_user:password@server/database', // read-only
+   // sample-3: multiple db (slaves)
+   'dsn' =&gt; 'mysql://rw_user:password@master/database', // read-write(master)
+   'dsn_r2' =&gt; array(
+        'mysql://ro_user:password@slave1/database', // read-only(slave)
+        'mysql://ro_user:password@slave2/database', // read-only(slave)
+    ),
+);</code></pre>
+<p>上記のようにdsnというkeyにDSNを記述することでBackendからgetDBによってDBオブジェクトが呼び出されてコネクトするときのDSNを指定することができます。</p>
+<p>データベースオブジェクトを、アクションクラスやアプリケーションマネージャーでは以下の形で取得することが出来ます。</p>
+<pre><code>$this-&gt;backend-&gt;getDB('r'); // dsn_r の設定を返す</code></pre>
+<p>ひとつのdsnに複数の接続先が配列で指定された場合は、ランダムに接続先が返ってきます。</p>
+<pre><code>$this-&gt;backend-&gt;getDB('r2'); // dsn_r2 の接続を返す。</code></pre>
+<p><a href="db.html">データベースアクセス</a>のページも参照してください。</p>
+<h4>ログ出力の設定</h4>
+<p>ログ出力の設定の詳細については、 <a href="log.html">Ethnaでログ出力を制御する</a> のページを参照してください。</p>
+<h4>memcached</h4>
+<p>memcached も、データベース接続設定と同様に多様な設定が可能です。memcached がひとつの場合の設定を以下に示します。</p>
+<pre><code>$config = array(
+   // sample-1: single (or default) memcache
+   'memcache_host' =&gt; 'localhost', // memcached を置いているホスト
+   'memcache_port' =&gt; 11211, // ポート番号
+   'memcache_use_pconnect' =&gt; false, // 永続的な接続をサポートするか
+   'memcache_retry' =&gt; 3, // 接続に失敗した場合のリトライ回数
+   'memcache_timeout' =&gt; 3, // 接続タイムアウト値
+ );</code></pre>
+<p>以下のように名前空間を指定して複数台のmemcached を指定することも可能です。</p>
+<pre><code>$config = array(
+   // sample-2: multiple memcache servers (distributing w/ namespace and ids)
+   'memcache' =&gt; array(
+        'namespace1' =&gt; array(
+            0 =&gt; array(
+                'memcache_host' =&gt; 'cache1.example.com',
+                'memcache_port' =&gt; 11211,
+            ),
+            1 =&gt; array(
+                'memcache_host' =&gt; 'cache2.example.com',
+                'memcache_port' =&gt; 11211,
+            ),
+        ),
+    ),
+ );</code></pre>
+<h4>国際化設定</h4>
+<pre><code>この機能を利用するには、Ethna 2.5.0 preview2 以降が必要です。
+
+$config = array(
+    'use_gettext' =&gt; false,
+);</code></pre>
+<p>Ethnaプロジェクトを国際化する手段として、iniファイルを利用する方法と、gettext を利用する方法の２種類が用意されています。デフォルトは iniファイルを利用する方法です。詳細は <a href="i18n.html">プロジェクトの国際化(2.5.0 preview2以降)</a> を参照してください。</p>
+<p>gettext を利用する場合に、この値を true にします。</p>
+<h4>CSRF対策</h4>
+<pre><code>$config = array(
+    'csrf' =&gt; 'Session',
+);</code></pre>
+<p>CSRF とは、ログイン済みのユーザーに細工したURLを踏ませることで、ログイン済みユーザの権限を利用して意図しない操作を実行させるものです。詳細は <a href="csrf.html">クロスサイトリクエストフォージェリの対策コードについて</a> を参照してください。</p>
+<p>デフォルト値は、上記のように 'Session' となっており、正当な値をセッションに格納するようになっています。現状はこの値を変更できません。</p>
+<h3>設定値をiniファイルで管理する</h3>
+<p>etc/[appid]-ini.phpの中では変数の定義だけでなくロジックの記述もできるので</p>
+<p>config.ini</p>
+<pre><code>debug = false
+dsn = mysql://user:password@localhost/db</code></pre>
+<p>を用意しておいて</p>
+<p>etc/[app-id]-ini.php内で</p>
+<pre><code>$config = parse_ini_file('config.ini', true);</code></pre>
+<p>としておけば設定値をiniファイルに記述することができます。*1</p>
+<h3>設定値をyamlで管理する</h3>
+<p>iniファイルとほとんど同じ手法でできます。 bogoYAMLのスタイルでよければharukiさんが作ったbogoYAMLを利用して YAMLで記述したデータを配列として取得するだけです。詳しくは、以下を参照して下さい。</p>
+<p><a href="http://hatotech.org/kumatch/archives/000492.html"><a href="http://hatotech.org/kumatch/archives/000492.html">http://hatotech.org/kumatch/archives/000492.html</a></a></p>
+<hr />
+<p>*1この例では、 <a href="http://jp.php.net/manual/ja/function.parse-ini-file.php">parse_ini_file 関数</a>への第二引数を true にして、セクション定義を解釈させるようになっていますが、dsn のようなEthnaの動作の根本に関わる一部の設定値については、 [セクション定義されていないことを前提に値を取得する実装](doc/ __filesource/fsource_Ethna__ classEthna_Controller.php.html#a1878)が Ethna でなされているため、セクション定義しない方が無難かもしれません  </p>

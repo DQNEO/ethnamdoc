@@ -1,0 +1,98 @@
+<h1>ページャを作成する</h1>
+<ul>
+<li>概要 
+<ul>
+<li>Pagerを作成する例 </li>
+<li>ページャを表示するテンプレートの例 </li>
+<li>できあがり </li>
+<li>
+</li>
+</ul></li>
+<li>comment </li>
+</ul>
+<h2>ページャを作成する</h2>
+<hr />
+<p>書いた人:shoma</p>
+<hr />
+<h2>概要</h2>
+<p>検索結果やリストの一覧などのページにGoogle風のページリンクを作成します。</p>
+<p>Ethna_Util::getDirectLinkList()を使用してページャを作成します。 Ethna_Util::getDirectLinkList(全データ数, 表示オフセット, 1ページあたりに表示する件数)となっています。以下の例ではstartが指定されるオフセットになっています。</p>
+<h3>Pagerを作成する例</h3>
+<pre><code>function perform()
+{
+    $this-&gt;total = 100;
+    $this-&gt;offset = $this-&gt;af-&gt;get('start') == null ? 0 : $this-&gt;af-&gt;get('start');
+    $this-&gt;count = 10;
+
+    $this-&gt;getPager();
+    return 'index';
+}
+
+/**
+*
+* ページャの作成
+*
+* @access public
+* @return void
+*/
+function getPager(){
+    $pager = Ethna_Util::getDirectLinkList($this-&gt;total, $this-&gt;offset, $this-&gt;count);
+    $next = $this-&gt;offset + $this-&gt;count;
+    if($next &lt; $this-&gt;total){
+        $last = ceil($this-&gt;total / $this-&gt;count);
+        $this-&gt;af-&gt;setApp('hasnext', true);
+        $this-&gt;af-&gt;setApp('next', $next);
+        $this-&gt;af-&gt;setApp('last', ($last * $this-&gt;count) - $this-&gt;count);
+    }
+    $prev = $this-&gt;offset - $this-&gt;count;
+    if($this-&gt;offset - $this-&gt;count &gt;= 0){
+        $this-&gt;af-&gt;setApp('hasprev', true);
+        $this-&gt;af-&gt;setApp('prev', $prev);
+    }
+    $this-&gt;af-&gt;setApp('current', $this-&gt;offset);
+    $this-&gt;af-&gt;setApp('link', 'localhost');
+    $this-&gt;af-&gt;setApp('pager', $pager);
+}</code></pre>
+<h3>ページャを表示するテンプレートの例</h3>
+<p>テンプレート側では</p>
+<pre><code>{if $app.hasprev}
+&lt;a href="{$app.link}?start=0"&gt;最初&lt;/a&gt;&amp;nbsp;&lt;a href="{$app.link}?start={$app.prev}"&gt;&amp;lt;&amp;lt;&lt;/a&gt;
+{else}
+最初&amp;nbsp;&amp;lt;&amp;lt;
+{/if}
+{foreach from=$app.pager item=page}
+{if $page.offset == $app.current}
+&lt;strong&gt;{$page.index}&lt;/strong&gt;
+{else}
+&lt;a href="{$app.link}?start={$page.offset}"&gt;{$page.index}&lt;/a&gt;
+{/if}
+&amp;nbsp;
+{/foreach}
+{if $app.hasnext}
+&lt;a href="{$app.link}?start={$app.next}"&gt;&amp;gt;&amp;gt;&lt;/a&gt;
+&amp;nbsp;&lt;a href="{$app.link}?start={$app.last}"&gt;最後&lt;/a&gt;
+{else}
+&amp;gt;&amp;gt;&amp;nbsp;最後
+{/if}</code></pre>
+<h3>できあがり</h3>
+<h3></h3>
+<p><a href="plugin=attach&amp;refer=ethna-document-dev_guide-misc-pager&amp;openfile=pager.png.html" title="pager.png"><img src="http://ethna.jp/index.php?plugin=ref&amp;page=ethna-document-dev_guide-misc-pager&amp;src=pager.png" alt="pager.png" title="pager.png" /></a></p>
+<h2>comment</h2>
+<ul>
+<li>
+<p>最後の一行って「最後&nbsp;&gt;&gt;」ではなくて、「&gt;&gt;&nbsp;最後」では？ -- yanai</p>
+<ul>
+<li>修正しておきました。 -- halt</li>
+</ul>
+</li>
+<li>
+<p>$this-&gt;af-&gt;get('start')→'start'はアクションフォームで定義してないため、リンク機能うまく動けないようです。 ActionFormにstartの定義を追加します。</p>
+<p>var $form = array(
+'start' =&gt; array(
+'type' =&gt; VAR_TYPE_STRING,<br />
+'form_type' =&gt; FORM_TYPE_HIDDEN,
+),
+　　);</p>
+</li>
+<li>スパムから復旧．たぶんこれでいいと思うんですけど．(2009/10/17) --sotarok</li>
+</ul>

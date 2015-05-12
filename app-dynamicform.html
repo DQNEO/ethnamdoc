@@ -1,0 +1,173 @@
+<h1>フォーム定義を動的に変更する</h1>
+<p>Ethna でのアクションフォームの定義は、以下のように固定の配列として定義します。つまり、クラスのメンバとして宣言するため、PHP では関数コールや変数の形でフォーム定義を動的に定義することはできません。これは PHP の言語仕様上の制限です*1</p>
+<p>ここでは、そうした制限を越えて、フォーム定義をsubmit後に変更する方法を示します。</p>
+<pre><code>$form = array(
+       'sample' =&gt; array( // 正しいフォーム定義
+           'type' =&gt; VAR_TYPE_INT,
+           'name' =&gt; 'sample',
+           // ...
+       ),
+       'invalid' =&gt; array( // 間違ったフォーム定義
+           'type' =&gt; $dynamic_type, // 変数は駄目
+           'name' =&gt; _('invalid'), // gettext 等、動的な呼び出しは×
+           // ...
+       ),</code></pre>
+<ul>
+<li>フォーム定義を動的に変更する 
+<ul>
+<li>フォーム定義を動的にしなければならない理由 </li>
+<li>Ethna 2.5.0 以降でのやり方 </li>
+<li>フォーム定義変更専用のヘルパメソッド </li>
+<li>フォームヘルパが絡んだ場合 </li>
+<li>Ethna 2.3.5 以前のやり方 </li>
+<li>どこに書くか？ </li>
+<li>フォーム定義の設定 </li>
+<li>submitされた値を設定しなおす </li>
+<li>全体のサンプルコード </li>
+<li>(参考)ActionFormのform定義を直接変更する方法 </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | key | ---------- | 新規作成 |
+| 書いた人 | mumumu | 2009-01-28 | 最新版に追随する形で全面的に修正 |
+| 書いた人 | mumumu | 2009-06-03 | フォームヘルパが絡んだ場合の記述を追加 |
+| 書いた人 | DQNEO | 2010-11-11 | ActionFormのform定義を直接変更する方法を追加 |</p>
+<h3>フォーム定義を動的にしなければならない理由</h3>
+<p>動的にフォーム定義を Ajax 等で動的にブラウザ側のインターフェイスを変更するようになった今にあっては、submitされた値、または データベースやセッションの値に応じて、フォーム定義を変更したいとの要求は自然に出てくるでしょう。</p>
+<p>ひとつの例として、SELECT ボックスを複数段展開させなければいけない場合をあげてみます。都道府県を選んだ後に、市町村のSELECTボックスの値を変えなければならなくなったら、固定のフォーム定義ではうまくいかないでしょう</p>
+<pre><code>都道府県: &lt;select name="prefecture"&gt;
+            &lt;option value="1"&gt;北海道&lt;/option&gt;
+            ...
+          &lt;/select&gt;
+市町村: &lt;select name="city"&gt;
+            &lt;option value="1"&gt;北海道なら札幌&lt;/option&gt;
+            &lt;option value="2"&gt;神奈川なら横浜&lt;/option&gt;
+            ...
+          &lt;/select&gt;</code></pre>
+<h3>Ethna 2.5.0 以降でのやり方</h3>
+<p>Ethna 2.5.0 以降では、フォーム定義を動的に変更するための場所を統一するためのAPIが整備されました。フォーム定義はアクションフォームに関することなので、Ethna_ActionForm クラスのメソッドで統一するのがスマートです。</p>
+<p>よって、以下のようなAPI が定義されています。</p>
+<h4>フォーム定義変更専用のヘルパメソッド</h4>
+<p>Ethna 2.5.0 以降では、Ethna_ActionForm#setFormDef_PreHelper を使います。このメソッドを呼び出す前に、Ethna_Session, Ethna_Backend などがすべて初期化されるため、データベースやセッションの値に基づいてフォーム定義を設定することが可能です。</p>
+<p>また、このメソッドが呼び出されたあと、Ethna_ActionForm#setFormVars が呼び出されるため、上記で設定したフォーム定義に基づいて submit した値が自動設定されます。</p>
+<pre><code>/**
+  * フォーム定義変更用、ユーザ定義ヘルパメソッド
+  *
+  * Ethna_ActionForm#prepare() が実行される前に
+  * ユーザが動的にフォーム定義を変更したい場合に
+  * このメソッドをオーバーライドします。
+  *
+  * $this-&gt;backend も初期化済みのため、DBやセッション
+  * の値に基づいてフォーム定義を変更することができます。
+  *
+  * @access public
+  */
+function setFormDef_PreHelper()
+{
+    // セッションや DBのオブジェクトを以下のようにして利用可能   
+    $session = $this-&gt;backend-&gt;getSession();
+    $db = $this-&gt;backend-&gt;getDB();
+
+    // フォーム名とフォーム定義の設定
+    $name = "question_1";
+    $def = array (
+              'name' =&gt; $name . "の答え", // 動的なフォーム定義
+              'required' =&gt; true,
+              'form_type' =&gt; FORM_TYPE_TEXT,
+              'type' =&gt; VAR_TYPE_STRING,
+              'filter' =&gt; null,
+          );
+    $this-&gt;setDef($name, $def);
+
+    // このメソッド呼び出しのあと、Ethna_ActionForm#setFormVars
+    // が呼び出され、上記で追加した question_1 の値も
+    // 自動で設定される。
+}</code></pre>
+<h4>フォームヘルパが絡んだ場合</h4>
+<p>フォームヘルパについては、 <a href="view-form_helper.html">フォームヘルパ</a> の説明も参照してください。</p>
+<p>少し高度な話題ですが、フォームヘルパは、Ethna_ViewClass で現在のフォームとは別に、以下のように ethna_action で指定されたアクションフォームを初期化します。それは、Submit されたときに初期化されたアクションフォームとは別のため、動的に値を設定したい場合は別のAPI が必要になります。</p>
+<pre><code>{form ethna_action="formhelper"}
+  {* [appid]Form_Formhelper というアクションフォームが初期化される *} 
+{/form}</code></pre>
+<p>フォームヘルパで利用するフォーム定義を動的に変更したい場合は、以下の特別なメソッドを使います。使い方は <a href="app-dynamicform.html#j5cff07b">フォーム定義変更専用のヘルパメソッド</a> で説明した setFormDef_PreHelper() と全く同じです。</p>
+<pre><code>/**
+  * フォーム定義変更用、ユーザ定義ヘルパメソッド
+  *
+  * フォームヘルパを使うときに、フォーム定義を動的に
+  * 変更したい場合に、このメソッドをオーバライドします。
+  *  
+  * このメソッドは、以下の定義をテンプレートで行った場
+  * 合に呼び出されます。
+  *
+  * {form ethna_action=...} (ethna_action がない場合は呼び出されません)
+  * {form_input action=...} (action がない場合は呼び出されません)
+  *
+  * @access public
+  */
+function setFormDef_ViewHelper()
+{
+    // TODO: デフォルト実装は Ethna_ActionClass#prepare の直前
+    // に呼び出されるものと同じ。異なる場合にオーバライドする
+    $this-&gt;setFormDef_PreHelper();
+}</code></pre>
+<h3>Ethna 2.3.5 以前のやり方</h3>
+<h4>どこに書くか？</h4>
+<p>動的な定義も含めてActionFormの中で完結させたいところですが、ActionForm 内にはロジックが書けないため、データベースのインスタンスを拾うなどしてフォーム定義を動的に変更することができません。</p>
+<p>Ethna_ActionClass#prepare もしくは Ethna_ActionClass#perform に処理を記述すればよいですが、フォーム値の自動検証を Ethna_ActionClass#prepare で行うのが一般的であることを考えると、前処理を行う prepareに処理を書いたほうがスマートです。</p>
+<h4>フォーム定義の設定</h4>
+<p>まず、フォーム名とその定義がどのようなものになるかを決めます。以下の例では、フォーム定義 $def に &quot;$name の答え&quot; という動的な値を定義しています。</p>
+<pre><code>// フォーム名とフォーム定義の設定
+    $name = "question_1";
+    $def = array (
+              'name' =&gt; $name . "の答え", // 動的なフォーム定義
+              'required' =&gt; true,
+              'form_type' =&gt; FORM_TYPE_TEXT,
+              'type' =&gt; VAR_TYPE_STRING
+              'filter' =&gt; null,
+          );</code></pre>
+<p>しかしActionFormのインスタンスにこの定義を設定しない限り、このフォーム定義は使用できません。</p>
+<p>よって以下のようにして、Ethna_ActionForm#setDef メソッドを呼び出してフォーム定義を設定します。<br />
+複数のフォーム定義を処理するには、この処理をループさせればよいでしょう。</p>
+<pre><code>// フォーム定義をセットする
+    $this-&gt;af-&gt;setDef($name, $def);</code></pre>
+<h4>submitされた値を設定しなおす</h4>
+<p>Ethna_ActionForm#setDef を呼び出しただけでは、アクションフォーム内のフォーム定義が変更されただけで、submit された値がアクションフォームに設定されたわけではありません。</p>
+<p>よって、以下のようにして $_POST や $_GET 等の値をアクションフォームのインスタンスに再設定してやります。</p>
+<pre><code>// submit された $_POST 等の値をアクションフォーム
+    // に設定しなおす
+    $this-&gt;af-&gt;setFormVars();</code></pre>
+<p>こうすれば、新しいフォーム定義に基づいて検証を行うことができます。</p>
+<pre><code>// 新しいフォーム定義に基づいてフォーム値を検証
+    if ($this-&gt;af-&gt;validate() &gt; 0) {
+        return 'index';
+    }</code></pre>
+<h4>全体のサンプルコード</h4>
+<p>上記の説明で使ったサンプルコードの全容をまとめると、以下のようになります (左側は行番号です)</p>
+<pre><code>1: function prepare() {
+2:
+3: // フォーム名とフォーム定義の設定
+4: $name = "question_1";
+5: $def = array (
+6: 'name' =&gt; $name . "の答え", // 動的なフォーム定義
+7: 'required' =&gt; true,
+8: 'form_type' =&gt; FORM_TYPE_TEXT,
+9: 'type' =&gt; VAR_TYPE_STRING
+10: 'filter' =&gt; null,
+11: );
+12:
+13: // フォーム定義をセットする
+14: $this-&gt;af-&gt;setDef($name, $def);
+15:
+16: // submit された $_POST 等の値をアクションフォーム
+17: // に設定しなおす
+18: $this-&gt;af-&gt;setFormVars();
+19:    
+20: // 新しいフォーム定義に基づいてフォーム値を検証
+21: if ($this-&gt;af-&gt;validate() &gt; 0) {
+22: return 'index';
+23: }
+24:}</code></pre>
+<h4>(参考)ActionFormのform定義を直接変更する方法</h4>
+<p>別のやり方として、prepare内で、$this-&gt;af-&gt;formを直接変更するやり方もあります。</p>
+<p><a href="faq-dev_guide_faq.html#jee57430">faq-dev_guide_faq.html#jee57430</a></p>
+<hr />
+<p>*1(クラスのメンバ変数が固定でなければならない根拠としては、PHP4では、 <a href="http://jp.php.net/manual/ja/keyword.class.php"><a href="http://jp.php.net/manual/ja/keyword.class.php">http://jp.php.net/manual/ja/keyword.class.php</a></a> が、PHP5 では、 <a href="http://jp.php.net/manual/ja/language.oop5.basic.php"><a href="http://jp.php.net/manual/ja/language.oop5.basic.php">http://jp.php.net/manual/ja/language.oop5.basic.php</a></a> があります。  </p>

@@ -1,0 +1,58 @@
+<h1>フォームテンプレート</h1>
+<p>アクションフォームの定義を毎回配列の形で書いていくのは、数が多くなってくると非常に面倒です。フォームテンプレートは、そんな要求があった場合に、親クラスに共通の雛形を定義することで、子クラスでその定義を省略させることができる機能です。</p>
+<p>複数の画面で共通するフォームがあったような場合に、この機能は特に有用です。</p>
+<ul>
+<li>フォームテンプレート 
+<ul>
+<li>基本的な使い方 </li>
+<li>サンプルコード </li>
+<li>使い方のコツ </li>
+</ul></li>
+</ul>
+<p>| 書いた人 | ------ | ---------- | 新規作成 |
+| 書いた人 | mumumu | 2009-01-29 | 最新版に追随する形で全面的に修正 |</p>
+<h3>基本的な使い方</h3>
+<p>アクションフォームの親クラスに以下のように書くだけで、子クラスのActionFormでフォーム名を書くだけでその定義が使えるようになります。また、その定義のオーバライドも可能です。</p>
+<pre><code>class Sample_ActionForm extends Ethna_ActionForm
+{
+    var $form_template = array(
+        'mailaddress' =&gt; array(
+            'name' =&gt; 'メールアドレス',
+            'required' =&gt; true,
+            'max' =&gt; 255,
+            'filter' =&gt; FILTER_HW,
+            'custom' =&gt; 'checkMailaddress',
+            'form_type' =&gt; FORM_TYPE_TEXT,
+            'type' =&gt; VAR_TYPE_STRING,
+        ),
+    );
+}</code></pre>
+<h3>サンプルコード</h3>
+<p>以下に例を示します。上記の親クラスを継承し、'mailaddress' の定義をそのまま使うようにしています。また、オーバライドする例も示しています。</p>
+<pre><code>class Hoge_ActionForm extends Sample_ActionForm
+{
+    var $form = array(
+
+        // Ethna 2.5.0 以降では、名前だけ書けば良い
+        // もちろん、定義の一部も変更可能
+        'mailaddress',
+
+        // Ethna 2.3.5 以前では、名前に加えて array(), も必要
+        'mailaddress' =&gt; array(),
+
+        // 以下のようにすれば、定義を変更可能
+        // 親クラスでは required が true だったが
+        // ここでは false に変更している。
+        // 他の filter や name 等の定義は親クラスのまま。
+        'mailaddress' =&gt; array(
+            'required' =&gt; false,  
+        ),        
+    );
+}</code></pre>
+<h3>使い方のコツ</h3>
+<p>Ethna 2.3.0 からは、プロジェクトごとの親クラスとして次のファイルがありますので、 それに$form_template を定義しましょう。</p>
+<pre><code>{APPID}/app/{APPID}_ActionForm.php</code></pre>
+<p>また、共通のカテゴリ毎に、アクションフォームクラスを分割し、子クラスに継承させるのもひとつの手です。</p>
+<pre><code>{APPID}/app/{APPID}_ActionForm.php
+{APPID}/app/{APPID}_ActionForm_Hoge.php
+{APPID}/app/{APPID}_ActionForm_Fuga.php</code></pre>
