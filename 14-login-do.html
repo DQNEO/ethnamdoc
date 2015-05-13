@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
-    <link href="style.css" media="all" rel="stylesheet" />
+    <link href="css/style.css" media="all" rel="stylesheet" />
+    <link href="css/github.css" media="all" rel="stylesheet" />
 </head>
 <body>
-<p><a href="index.html">目次</a></p>
-
+  <p><a href="index.html">目次</a></p>
+<div class="blob instapaper_body">
+  <article class="markdown-body entry-content">
 <h1>実用的なアプリケーション開発 2 (ログイン処理)</h1>
 <h2>ログインアクションの追加</h2>
 <p>フォームがsubmitされた際に実行されるアクション「login_do」を追加します。</p>
@@ -88,8 +90,11 @@
 まずアクションクラスのprepare()メソッドが呼ばれ、prepare()メソッドがnullを返した場合のみperform()メソッドが呼び出されます。</p>
 <p>ようするに、prepare()メソッドでフォーム値の検証を行うこと、perform()メソッドでは全てのデータはサニタイズされているという前提で処理を行うことが出来る、安全且つ簡潔なコードが書けるというわけです(やっぱりStrutsの真似)。</p>
 <p>なお、フォーム値のバリデーションについては別記事をご覧下さい。</p>
-<p>see also: [フォーム値のバリデーションを行う]</p><p>
-  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
-</p>
+<p>see also: [フォーム値のバリデーションを行う]</p>  </article>
+</div>
+
+<div class="site-footer">
+  @2015 <a href="https://twitter.com/DQNEO">DQNEO</a>
+</div>
 </body>
 </html>

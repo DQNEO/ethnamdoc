@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
-    <link href="style.css" media="all" rel="stylesheet" />
+    <link href="css/style.css" media="all" rel="stylesheet" />
+    <link href="css/github.css" media="all" rel="stylesheet" />
 </head>
 <body>
-<p><a href="index.html">目次</a></p>
-
+  <p><a href="index.html">目次</a></p>
+<div class="blob instapaper_body">
+  <article class="markdown-body entry-content">
 <h1>Sessionを利用する</h1>
 <ul>
 <li>ActionClassからセッションを呼び出す </li>
@@ -62,8 +64,11 @@ ethna add-action index</code></pre>
 <h2>複雑な認証の仕組みを実現する。</h2>
 <p>roleの概念を付加した認証の仕組みも簡単に作れます。 ユーザ名と、パスワードでログインして、各ユーザのグループ権限ごとに 行う処理を変えるとか。認証情報を管理するクラスを作っておいて、 それをauthenticateの中で呼び出してやるだけです。</p>
 <h2>毎回authenticateメソッドにお約束を書くのが面倒</h2>
-<p>上記の方法だと認証が必要になるページはすべてauthenticateメソッドを書くハメになります。 それは面倒なのでauthenticateメソッドを書いたActionクラスを継承してしまいましょう。</p><p>
-  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
-</p>
+<p>上記の方法だと認証が必要になるページはすべてauthenticateメソッドを書くハメになります。 それは面倒なのでauthenticateメソッドを書いたActionクラスを継承してしまいましょう。</p>  </article>
+</div>
+
+<div class="site-footer">
+  @2015 <a href="https://twitter.com/DQNEO">DQNEO</a>
+</div>
 </body>
 </html>

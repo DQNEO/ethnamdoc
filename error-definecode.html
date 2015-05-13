@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
-    <link href="style.css" media="all" rel="stylesheet" />
+    <link href="css/style.css" media="all" rel="stylesheet" />
+    <link href="css/github.css" media="all" rel="stylesheet" />
 </head>
 <body>
-<p><a href="index.html">目次</a></p>
-
+  <p><a href="index.html">目次</a></p>
+<div class="blob instapaper_body">
+  <article class="markdown-body entry-content">
 <h1>エラーコードの定義</h1>
 <h2>エラーコードの定義</h2>
 <p>エラーコードは，app/{アプリケーションID}_Error.phpに定義します．</p>
@@ -15,8 +17,11 @@
 <pre><code>$i = 259;
 /** エラーコード: ユーザ認証エラー */
 define('E_SAMPLE_AUTH', $i++);</code></pre>
-<p>259までのエラーコードはフレームワークで予約されていますのでエラーコードには300以上の整数を使用してください。</p><p>
-  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
-</p>
+<p>259までのエラーコードはフレームワークで予約されていますのでエラーコードには300以上の整数を使用してください。</p>  </article>
+</div>
+
+<div class="site-footer">
+  @2015 <a href="https://twitter.com/DQNEO">DQNEO</a>
+</div>
 </body>
 </html>

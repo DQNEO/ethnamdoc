@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
-    <link href="style.css" media="all" rel="stylesheet" />
+    <link href="css/style.css" media="all" rel="stylesheet" />
+    <link href="css/github.css" media="all" rel="stylesheet" />
 </head>
 <body>
-<p><a href="index.html">目次</a></p>
-
+  <p><a href="index.html">目次</a></p>
+<div class="blob instapaper_body">
+  <article class="markdown-body entry-content">
 <h1>Ethna で コマンドラインから利用するスクリプトを書く。</h1>
 <p>Webアプリケーション を書いていると、コマンドラインから利用するスクリプトを書きたくなるときがあるかもしれません。たとえばバッチ処理や、データベースのテストデータ生成等、Webアプリケーションのメインの処理からは外れた、細々とした処理が考えられます。</p>
 <p>たとえば、「データベースのデータを集計して集計用のテーブルに書き込む」という一定時間毎に実行する単純なバッチ処理を考えてみましょう。新たに接続処理やクエリを流す処理を <strong>独自に書きたくない</strong> なぁと思いませんか？ こうした場合は、既にあるフレームワークの枠組みを使い回せると便利な場合があります。</p>
@@ -113,8 +115,11 @@ Sample_Controller::main_CLI('Sample_Controller', 'batch_sum_daily');
 <p>*1ただし、アクションクラスにロジックを長々と書くのはおすすめしません。 <a href="tutorial-practice3.html#x9a32944">tutorial-practice3.html#x9a32944</a><br />
 *2アクションフォームクラスも生成されますが、コマンドラインを解釈してEthnaがフォーム定義に突っ込んでくれるわけではないので、役に立ちません<br />
 *3後で述べるエントリポイントさえ間違わなければ、ですが。<br />
-*4これが プロジェクト の app ディレクトリと lib ディレクトリに include_path を通してくれているので、間違うとEthna の機構が全て使えなくなって終了、、です。  </p><p>
-  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
-</p>
+*4これが プロジェクト の app ディレクトリと lib ディレクトリに include_path を通してくれているので、間違うとEthna の機構が全て使えなくなって終了、、です。  </p>  </article>
+</div>
+
+<div class="site-footer">
+  @2015 <a href="https://twitter.com/DQNEO">DQNEO</a>
+</div>
 </body>
 </html>

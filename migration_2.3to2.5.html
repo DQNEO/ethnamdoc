@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
-    <link href="style.css" media="all" rel="stylesheet" />
+    <link href="css/style.css" media="all" rel="stylesheet" />
+    <link href="css/github.css" media="all" rel="stylesheet" />
 </head>
 <body>
-<p><a href="index.html">目次</a></p>
-
+  <p><a href="index.html">目次</a></p>
+<div class="blob instapaper_body">
+  <article class="markdown-body entry-content">
 <h1>Ethna 2.3.0 から 2.5.0 への移行ガイド</h1>
 <p>Ethna 2.3.x で作った古いプロジェクトを新しいバージョン 2.5.x 系に対応させるためのガイドラインです。(これに従えばうまくいく、というわけではありません。必ずバックアップを用意した上で、確認しながら作業するようにしてください。)</p>
 <p>※ Ethna 2.1.0 から 2.3.0 への移行については、 <a href="ethna-document-dev_guide-misc-migrate_project210to230.html" title="ethna-document-dev_guide-misc-migrate_project210to230 (1217d)">こちら</a> を御覧下さい。</p>
@@ -166,8 +168,11 @@ define('LANG_JA', 'ja');</code></pre>
 <p>2.5.x では、include_path の順番が [appid]/app,lib を最も優先するように変更されました。これは自由に外部スクリプトをインストールできないレンタルサーバを考慮した変更であり、新しいプロジェクトのみに適用されます。</p>
 <h4>[注意] ethna コマンドで自動生成されるスケルトン</h4>
 <p>2.5.x では、自動生成されたスケルトンがエンコーディングに依存しないようにするため、ソースコメントがすべてASCIIで記述されています。つまり英語コメントになっているということです。</p>
-<p>日本語の方がいいのに、、と仰る方がおられるとは思いますが、エンコーディングに依存させないための変更ですので、御理解頂ければと思います。(2.3.x では、これがutf-8直打ちだったために、UTF-8を望む人が強制的に変換を行わなければなりませんでした)</p><p>
-  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
-</p>
+<p>日本語の方がいいのに、、と仰る方がおられるとは思いますが、エンコーディングに依存させないための変更ですので、御理解頂ければと思います。(2.3.x では、これがutf-8直打ちだったために、UTF-8を望む人が強制的に変換を行わなければなりませんでした)</p>  </article>
+</div>
+
+<div class="site-footer">
+  @2015 <a href="https://twitter.com/DQNEO">DQNEO</a>
+</div>
 </body>
 </html>

@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
-    <link href="style.css" media="all" rel="stylesheet" />
+    <link href="css/style.css" media="all" rel="stylesheet" />
+    <link href="css/github.css" media="all" rel="stylesheet" />
 </head>
 <body>
-<p><a href="index.html">目次</a></p>
-
+  <p><a href="index.html">目次</a></p>
+<div class="blob instapaper_body">
+  <article class="markdown-body entry-content">
 <h1>ディレクトリ構成の解説</h1>
 <p>プロジェクト作成後のディレクトリ構成は下記のようになっています。</p>
 <pre><code>.               (プロジェクトルート)
@@ -43,8 +45,11 @@
 <h2>セキュリティ上の注意</h2>
 <p>プロジェクトルートを、インターネット上から見える場所には<strong>絶対</strong>に置かないようにしてください。
 そのようなことをすると、<code>etc/</code>以下を覗かれてパスワードを見れたり、<code>log/</code>以下を覗かれて秘匿情報が流出することになります。</p>
-<p>必ずwwwディレクトリのみを公開ディレクトリに設定するようにしてください。</p><p>
-  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
-</p>
+<p>必ずwwwディレクトリのみを公開ディレクトリに設定するようにしてください。</p>  </article>
+</div>
+
+<div class="site-footer">
+  @2015 <a href="https://twitter.com/DQNEO">DQNEO</a>
+</div>
 </body>
 </html>

@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
-    <link href="style.css" media="all" rel="stylesheet" />
+    <link href="css/style.css" media="all" rel="stylesheet" />
+    <link href="css/github.css" media="all" rel="stylesheet" />
 </head>
 <body>
-<p><a href="index.html">目次</a></p>
-
+  <p><a href="index.html">目次</a></p>
+<div class="blob instapaper_body">
+  <article class="markdown-body entry-content">
 <h1>アクションクラスからの戻り値に応じてコントローラで遷移先を決定する</h1>
 <h2>アクションクラスからの戻り値に応じてコントローラで遷移先を決定する</h2>
 <p>Controllerに遷移先定義を追加します。app/{$アプリケーションID}_Controller.phpを以下のように編集してください。</p>
@@ -29,8 +31,11 @@ var $forward = array(
 + 'forward_path' =&gt; 'login.tpl',
 + ),
 );</code></pre>
-<p>これで、'login'という遷移先にSample_View_Loginというビュークラスと、login.tplというテンプレートファイルが関連付けられます。</p><p>
-  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
-</p>
+<p>これで、'login'という遷移先にSample_View_Loginというビュークラスと、login.tplというテンプレートファイルが関連付けられます。</p>  </article>
+</div>
+
+<div class="site-footer">
+  @2015 <a href="https://twitter.com/DQNEO">DQNEO</a>
+</div>
 </body>
 </html>

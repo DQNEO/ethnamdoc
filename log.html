@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
-    <link href="style.css" media="all" rel="stylesheet" />
+    <link href="css/style.css" media="all" rel="stylesheet" />
+    <link href="css/github.css" media="all" rel="stylesheet" />
 </head>
 <body>
-<p><a href="index.html">目次</a></p>
-
+  <p><a href="index.html">目次</a></p>
+<div class="blob instapaper_body">
+  <article class="markdown-body entry-content">
 <h1>Ethna でのログ出力を制御する</h1>
 <p>Ethna では、実行時に様々なログを出力することができます。これは開発時、リリース後の双方に必要な出力を考慮して設計されており、ログレベルを変えることで様々なニーズに応えることができます。</p>
 <p>ここでは、Ethna でサポートしているログ出力について説明します。</p>
@@ -241,8 +243,11 @@ $logger-&gt;log(LOG_NOTICE, "メッセージ");</code></pre>
     ),
     'log_option' =&gt; 'pid,function,pos',
     'log_filter_do' =&gt; '',
-    'log_filter_ignore' =&gt; 'Undefined index.*%%.*tpl',</code></pre><p>
-  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
-</p>
+    'log_filter_ignore' =&gt; 'Undefined index.*%%.*tpl',</code></pre>  </article>
+</div>
+
+<div class="site-footer">
+  @2015 <a href="https://twitter.com/DQNEO">DQNEO</a>
+</div>
 </body>
 </html>
