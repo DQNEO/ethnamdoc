@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
+    <link href="style.css" media="all" rel="stylesheet" />
 </head>
 <body>
 <p><a href="index.html">目次</a></p>
-  
+
 <h1>フォームへルパ</h1>
 <p>フォームヘルパとは、テンプレートでフォーム(<form>, <input>タグなど)を書くときに、 アクションフォームであらかじめ定義された情報から適切なタグを自動的に生成し、フォームを簡単に記述することができる機能です。</p>
 <p>少し複雑な部分もありますが、アクションフォームと連携する部分を理解すれば、これほど強力な武器はありません。現状は Smartyの利用を前提としていますが、将来的には他のテンプレートエンジンや、素のPHPへの対応も考えています。</p>
@@ -230,7 +231,7 @@ $this-&gt;af-&gt;setApp('sample',
 <p>実装の大部分はEthna_Renderer_SmartyではなくEthna_ViewClassが持っているため、本当はSmartyに限らずさまざまなレンダラで利用可能なはずです。しかし、現時点ではSmartyしかレンダラが用意されていません。素のPHPや、flexy等、他のテンプレートエンジンもサポートすべきだと考えています。</p>
 <hr />
 <p>*1Ethna 2.3.5 以前は、1テンプレートに複数 {form}{/form} ブロックタグを指定した場合は、エラーで戻ってきた場合等に、すべてのフォームに submit した値を補完するバグがありました。2.5.0 preview3 以降、この問題は改善しています。  </p><p>
-  2015 <a href="https://twitter.com/DQNEO>@DQNEO</a>
+  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
 </p>
 </body>
 </html>

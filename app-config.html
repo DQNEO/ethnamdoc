@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
+    <link href="style.css" media="all" rel="stylesheet" />
 </head>
 <body>
 <p><a href="index.html">目次</a></p>
-  
+
 <h1>Ethnaアプリケーションの設定ファイル</h1>
 <p>Ethna では、PHPファイルやテンプレートファイルを ethnaコマンドで生成し、生成したものを主に弄っていきます。しかし、アプリケーション全体に共通する設定というのも存在しており、それらは別に記述する必要があります。ここでは、そうしたアプリケーション全体の設定について説明します。</p>
 <ul>
@@ -152,7 +153,7 @@ dsn = mysql://user:password@localhost/db</code></pre>
 <p><a href="http://hatotech.org/kumatch/archives/000492.html"><a href="http://hatotech.org/kumatch/archives/000492.html">http://hatotech.org/kumatch/archives/000492.html</a></a></p>
 <hr />
 <p>*1この例では、 <a href="http://jp.php.net/manual/ja/function.parse-ini-file.php">parse_ini_file 関数</a>への第二引数を true にして、セクション定義を解釈させるようになっていますが、dsn のようなEthnaの動作の根本に関わる一部の設定値については、 [セクション定義されていないことを前提に値を取得する実装](doc/ __filesource/fsource_Ethna__ classEthna_Controller.php.html#a1878)が Ethna でなされているため、セクション定義しない方が無難かもしれません  </p><p>
-  2015 <a href="https://twitter.com/DQNEO>@DQNEO</a>
+  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
 </p>
 </body>
 </html>

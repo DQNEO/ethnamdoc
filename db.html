@@ -3,10 +3,11 @@
 <head>
     <meta charset="utf-8">
     <title>Ethnamドキュメント</title>
+    <link href="style.css" media="all" rel="stylesheet" />
 </head>
 <body>
 <p><a href="index.html">目次</a></p>
-  
+
 <h1>データベースアクセス</h1>
 <ul>
 <li>一番簡単なやり方(PEAR::DBを使う) </li>
@@ -102,7 +103,7 @@ $this-&gt;db_r-&gt;query("SELECT id FROM test");</code></pre>
 $data = array($id);
 $stmt =&amp; $this-&gt;db-&gt;db-&gt;prepare($sql);
 $res =&amp; $this-&gt;db-&gt;db-&gt;execute($stmt, $data);</code></pre><p>
-  2015 <a href="https://twitter.com/DQNEO>@DQNEO</a>
+  2015 <a href="https://twitter.com/DQNEO">@DQNEO</a>
 </p>
 </body>
 </html>
