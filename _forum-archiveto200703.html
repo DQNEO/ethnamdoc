@@ -11,94 +11,6 @@
 <div class="blob instapaper_body">
   <article class="markdown-body entry-content">
 <h1>ethna-community-forum-archiveto200703- Ethna - PHPウェブアプリケーションフレームワーク</title></h1>
-<h3>Ethna_DBのqueryが動かない。</h3>
-<blockquote>
-<p>（び） <a href="cmd=edit&amp;page=%A1%CA%A4%D3%A1%CB&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2007-03-14 (水) 20:40:03)  </p>
-<p>以下のように、ソースを書いたのですが、queryのところで何も表示されません。<br />
-使い方が誤っているのでしょうか？   </p>
-<p>要するに、複数のDBの読み書きがしたいのです。  </p>
-<p>$db =&amp; new Ethna_DB($this, $tooldb_dsn, FALSE);<br />
-echo &quot;Ethna_DB<br>&quot;;<br />
-$ret = $db-&gt;begin();<br />
-echo &quot;eeeeeeeeeeeee<br>&quot;;<br />
-$ret = $db-&gt;connect();<br />
-echo &quot;eeeeeeeeeeeee<br>&quot;;<br />
-$tooldb_mainte_inup_data =&amp; $db-&gt;query(&quot; SELECT * FROM tbl_sample &quot;);<br />
-echo &quot;eeeeeeeeeeeee<br>&quot;;<br />
-$db-&gt;commit();<br />
-echo &quot;eeeeeeeeeeeee<br>&quot;;<br />
-$db-&gt;disconnect();<br />
-echo &quot;eeeeeeeeeeeee<br>&quot;;</p>
-<ul>
-<li>なんかいろいろと根本的に勉強したほうがいいきがする。 -- 2007-03-15 (木) 10:32:36</li>
-<li>こちらを参考にするとよいかも<br />
-<a href="ethna-document-dev_guide-db.html#zc5316fe">db.html#zc5316fe</a> -- psuke <a href="cmd=edit&amp;page=psuke&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-03-15 (木) 13:48:29</li>
-<li>参考にしました。でも、Ethna以外の方法では、難しいのですね？（というか、ルール違反か？） -- （び） <a href="cmd=edit&amp;page=%A1%CA%A4%D3%A1%CB&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-03-16 (金) 14:03:57</li>
-</ul>
-</blockquote>
-<h3>シフトJISに変換して出力する方法。</h3>
-<blockquote>
-<p>（び） <a href="cmd=edit&amp;page=%A1%CA%A4%D3%A1%CB&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2007-03-08 (木) 22:50:51)  </p>
-<p>運用環境が、OS：euc-jp html出力が、SJISで困っています。  </p>
-<p>Ethnaに組み込まれているFilter機能と、ob_start()関数で、入出力時に各エンコードに変換して(Filterを使って)回避できるようなのですが、やり方がわかりません。  </p>
-<p>どなたか解決方法ご存知の方いらっしゃいませんか？</p>
-<ul>
-<li>Smartyフィルタって何？（＾＾；） -- （び） <a href="cmd=edit&amp;page=%A1%CA%A4%D3%A1%CB&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-03-09 (金) 12:36:50</li>
-<li>こんな感じでやってます -- ここいち <a href="cmd=edit&amp;page=%A4%B3%A4%B3%A4%A4%A4%C1&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-03-12 (月) 01:12:02</li>
-</ul>
-</blockquote>
-<pre><code>class Aero_Plugin_Filter_OutputFilter extends Ethna_Plugin_Filter
-{
-    /**
-     * 実行前フィルタ
-     *
-     * @access public
-     */
-    function preFilter()
-    {
-       ob_start();
-    }
-
-    /**
-     * 実行後フィルタ
-     *
-     * @access public
-     */
-    function postFilter()
-    {
-        $str = mb_convert_encoding(ob_get_contents(), 'sjis-win','eucjp-win');
-        ob_clean();
-        echo $str;
-        ob_end_flush();
-    }
-}</code></pre>
-<ul>
-<li>ありがとございあした。 -- （び） <a href="cmd=edit&amp;page=%A1%CA%A4%D3%A1%CB&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-03-14 (水) 20:38:27</li>
-</ul>
-<h3>DBでセッションを行うには</h3>
-<blockquote>
-<p>jitto <a href="cmd=edit&amp;page=jitto&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2007-02-13 (火) 12:33:33)  </p>
-<p><a href="http://www.itt-web.net/modules/bwiki/index.php?Ethna%A4%C7Session%A4%F2DB%A4%CB%BB%FD%A4%C3%A4%C6%A4%DF%A4%EB"><a href="http://www.itt-web.net/modules/bwiki/index.php?Ethna%A4%C7Session%A4%F2DB%A4%CB%BB%FD%A4%C3%A4%C6%A4%DF%A4%EB">http://www.itt-web.net/modules/bwiki/index.php?Ethna%A4%C7Session%A4%F2DB%A4%CB%BB%FD%A4%C3%A4%C6%A4%DF%A4%EB</a></a><br />
-こちらの記事によるとethna自体へハックしないとDBセッションが出来ない様ですが（２００６/５の記事）<br />
-それは未だに変わってませんか？</p>
-<ul>
-<li>Sessionクラスの _read,_writeあたりをオーバーライドして Controller でそのクラスを指定すれば動きます。_read,_writeメソッド内でAppObjectも使えました。 -- iyoda <a href="cmd=edit&amp;page=iyoda&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-02-15 (木) 15:58:00</li>
-</ul>
-</blockquote>
-<h3>トラックバックの受信について</h3>
-<blockquote>
-<p>sohta <a href="cmd=edit&amp;page=sohta&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2007-02-11 (日) 19:43:51)  </p>
-<p>Ethnaを用いてトラックバックを受信したいと思っているのですが、<br />
-<a href="http://url/?action_trackback=true&amp;key=4"><a href="http://url/?action_trackback=true&key=4">http://url/?action_trackback=true&key=4</a></a><br />
-をトラックバック送信先URLとして指定しているのですが、<br />
-POST(トラックバック)とGET(キー情報やアクション情報)の両方が取得されないために、ethna側で対応するアクションがわからず、indexへと飛ばされてしまうようです。<br />
-何か解決策などありますでしょうか？</p>
-<ul>
-<li>Ethna_ActionFormのsetFormVarsをオーバーライドして、GETとPOSTの両方を取得するようにするだけです。 -- sfio <a href="cmd=edit&amp;page=sfio&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-02-12 (月) 15:47:54</li>
-<li>ありがとうございます。さっそくやってみます。それにしてもスパムがうざいですね^^ -- sohta <a href="cmd=edit&amp;page=sohta&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-02-12 (月) 18:37:03</li>
-<li>Trackback.phpのActionFormクラスで、setFormVarsの冒頭を if(isset($_SERVER['REQUEST_METHOD']) == false) {return;} else {$http_vars =&amp; array_merge($_POST, $_GET);} としてみたのですが、うまくいきません。どこが間違っているのでしょうか。-- sohta <a href="cmd=edit&amp;page=sohta&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2007-02-12 (月) 18:54:00</li>
-</ul>
-</blockquote>
 <h3>PDOが、使えないと聞きましたが？</h3>
 <blockquote>
 <p>（び） <a href="cmd=edit&amp;page=%A1%CA%A4%D3%A1%CB&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2007-01-24 (水) 19:38:20)  </p>
@@ -996,24 +908,6 @@ because Smarty can't guess it's own plugin path.  </p>
 <li>Debian GNU/Linuxの安定版だとsmarty/libs/Smarty.class.phpになりました。 -- 通りすがりのものですが <a href="cmd=edit&amp;page=%C4%CC%A4%EA%A4%B9%A4%AC%A4%EA%A4%CE%A4%E2%A4%CE%A4%C7%A4%B9%A4%AC&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2006-08-31 (木) 13:35:15</li>
 </ul>
 </blockquote>
-<h3>Xzavier</h3>
-<blockquote>
-<p>Jayson <a href="cmd=edit&amp;page=Jayson&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2006-08-22 (火) 05:35:22)</p>
-<ul>
-<li>たまたま見たら遭遇したのでスパムを消しときました。スパム対策必要なんでしょうけどフィルタリング考えるのが面倒ってのがあるでしょうね。「<a href="http://」付きの投稿だけでも弾けば大分ちがうかな">http://」付きの投稿だけでも弾けば大分ちがうかな</a> -- sora <a href="cmd=edit&amp;page=sora&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2006-08-22 (火) 09:55:47</li>
-<li>と思ったけど、直接編集でやればBBSモジュール介さず意味無し・・対策考えるのはやはり時間要りますね -- sora <a href="cmd=edit&amp;page=sora&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2006-08-22 (火) 10:00:02</li>
-</ul>
-</blockquote>
-<h3>スパム</h3>
-<blockquote>
-<p>sfio <a href="cmd=edit&amp;page=sfio&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2006-08-18 (金) 10:35:50)  </p>
-<p>このフォーラムに対するスパムが鬱陶しいので、<br />
-<a href="http://pukiwiki.sourceforge.jp/?%E6%AC%B2%E3%81%97%E3%81%84%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%2F209"><a href="http://pukiwiki.sourceforge.jp/?%E6%AC%B2%E3%81%97%E3%81%84%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%2F209">http://pukiwiki.sourceforge.jp/?%E6%AC%B2%E3%81%97%E3%81%84%E3%83%97%E3%83%A9%E3%82%B0%E3%82%A4%E3%83%B3%2F209</a></a><br />
-を参考にして対策してみてはいかがでしょうか。</p>
-<ul>
-<li>ですねー、一応一度きたIPはbanしてるのですが、captchaなりキーワードフィルタなり、入れてみます -- ふじもと <a href="cmd=edit&amp;page=%A4%D5%A4%B8%A4%E2%A4%C8&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2006-08-23 (水) 09:54:16</li>
-</ul>
-</blockquote>
 <h3>Ethna_Controller.php の 1697 行目</h3>
 <blockquote>
 <p>m <a href="cmd=edit&amp;page=m&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2006-08-04 (金) 11:17:10)  </p>
@@ -1283,19 +1177,6 @@ solarisでは、LOG_AUTHPRIVが有効にならない（syslogの絡み？）よ�
 <ul>
 <li>おぉ！はげしくすみませんm(<em> </em>)m はげしくなおします！ -- ふじもと <a href="cmd=edit&amp;page=%A4%D5%A4%B8%A4%E2%A4%C8&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2006-06-13 (火) 10:56:30</li>
 <li>すばやい修正ありがとうございます〜。 -- BoBpp <a href="cmd=edit&amp;page=BoBpp&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2006-06-14 (水) 10:05:13</li>
-</ul>
-</blockquote>
-<h3>記事出ましたね</h3>
-<blockquote>
-<p>ましゅりく <a href="cmd=edit&amp;page=%A4%DE%A4%B7%A4%E5%A4%EA%A4%AF&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2006-06-13 (火) 01:30:59)  </p>
-<p>【PHPウォッチ】第27回 国産有力フレームワークEthnaの新版2.1.2リリース：ITpro<br />
-<a href="http://itpro.nikkeibp.co.jp/article/COLUMN/20060612/240709/"><a href="http://itpro.nikkeibp.co.jp/article/COLUMN/20060612/240709/">http://itpro.nikkeibp.co.jp/article/COLUMN/20060612/240709/</a></a></p>
-<h3>インサート文について</h3>
-<p>えすなかすき <a href="cmd=edit&amp;page=%A4%A8%A4%B9%A4%CA%A4%AB%A4%B9%A4%AD&amp;refer=ethna-community-forum-archiveto200703.html">?</a> (2006-06-07 (水) 03:49:16)  </p>
-<p>Ethna_AppObjectの以下の記述ってありなんすか？</p>
-<p>837: $sql = &quot;INSERT INTO $tables SET $set_list&quot;;</p>
-<ul>
-<li>いやー、基本的にナシだとは思います(MySQL only?)。次バージョンで、Ethna_AppObjectのDB依存解消をしようと思ってますんでその際には必ず。 <a href="http://ml.ethna.jp/pipermail/users/2006-June/000301.html"><a href="http://ml.ethna.jp/pipermail/users/2006-June/000301.html">http://ml.ethna.jp/pipermail/users/2006-June/000301.html</a></a>もご覧いただければと思います。 -- ふじもと <a href="cmd=edit&amp;page=%A4%D5%A4%B8%A4%E2%A4%C8&amp;refer=ethna-community-forum-archiveto200703.html">?</a> 2006-06-07 (水) 09:38:12</li>
 </ul>
 </blockquote>  </article>
 </div>
